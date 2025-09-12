@@ -4,6 +4,7 @@
 import { AxiosInstance, AxiosResponse } from "axios"; // Added AxiosInstance import
 import { withRetry } from "@dex-ai/core";
 import logger from "../../common/logger";
+import type { ApiRequestParams, ApiErrorContext } from "../../common/types";
 
 /**
  * Make a request to CoinGecko API with retries
@@ -11,8 +12,8 @@ import logger from "../../common/logger";
 export async function makeApiRequest<T>(
   client: AxiosInstance, // Added client parameter
   endpoint: string,
-  params: Record<string, any> = {},
-  errorContext: Record<string, any> = {},
+  params: ApiRequestParams = {},
+  errorContext: ApiErrorContext = {},
 ): Promise<AxiosResponse<T>> {
   const requestContext = {
     endpoint,

@@ -1,15 +1,19 @@
 import * as fs from "fs";
 import * as path from "path";
 import type { CacheAdapter } from "../types";
+import { getLogger } from "../logger";
+import { TIME_CONSTANTS } from "../constants";
+
+const logger = getLogger("file-cache");
 
 export function getCacheDir(cacheName: string): string {
-  // 检查是否在 serverless 环境（如 Vercel、AWS Lambda 等）
+  // Check if in serverless environment (like Vercel, AWS Lambda, etc.)
   const isServerless =
     !!process.env.VERCEL ||
     !!process.env.NOW_REGION ||
     !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 
-  // 优先使用 /tmp 目录（serverless 兼容）
+  // Prefer /tmp directory (serverless compatible)
   const baseDir = isServerless ? "/tmp" : process.cwd();
   const cacheDir = path.join(baseDir, ".cache", cacheName);
   if (!fs.existsSync(cacheDir)) {
@@ -31,7 +35,7 @@ export function getFromCache<T>(
     if (fs.existsSync(cacheFile)) {
       const cached = JSON.parse(fs.readFileSync(cacheFile, "utf-8"));
 
-      // 检查是否过期
+      // Check if expired
       if (cached.expires && Date.now() > cached.expires) {
         fs.unlinkSync(cacheFile);
         return null;
@@ -40,7 +44,9 @@ export function getFromCache<T>(
       return cached.data as T;
     }
   } catch (error) {
-    console.warn("Error reading from cache:", error);
+    logger.warn("Error reading from cache", {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
   return null;
 }
@@ -48,7 +54,7 @@ export function getFromCache<T>(
 export function saveToCache<T>(
   cacheName: string,
   data: T,
-  ttl: number = 300000, // 默认5分钟
+  ttl: number = TIME_CONSTANTS.DEFAULT_CACHE_TTL,
   ...keys: string[]
 ): void {
   const cacheFile = getCacheFilePath(cacheName, ...keys);
@@ -63,7 +69,9 @@ export function saveToCache<T>(
       }),
     );
   } catch (error) {
-    console.warn("Error writing to cache:", error);
+    logger.warn("Error writing to cache", {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
@@ -74,7 +82,9 @@ export function deleteFromCache(cacheName: string, ...keys: string[]): void {
       fs.unlinkSync(cacheFile);
     }
   } catch (error) {
-    console.warn("Error deleting from cache:", error);
+    logger.warn("Error deleting from cache", {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
@@ -88,7 +98,9 @@ export function clearCache(cacheName: string): void {
       });
     }
   } catch (error) {
-    console.warn("Error clearing cache:", error);
+    logger.warn("Error clearing cache", {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
@@ -96,7 +108,12 @@ export const fileCacheAdapter: CacheAdapter = {
   async getFromCache(cacheName, ...keys) {
     return getFromCache(cacheName, ...keys) ?? null;
   },
-  async saveToCache(cacheName, data, ttl = 300000, ...keys) {
+  async saveToCache(
+    cacheName,
+    data,
+    ttl = TIME_CONSTANTS.DEFAULT_CACHE_TTL,
+    ...keys
+  ) {
     saveToCache(cacheName, data, ttl, ...keys);
   },
   async deleteFromCache(cacheName, ...keys) {

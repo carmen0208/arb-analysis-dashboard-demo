@@ -1,4 +1,4 @@
-declare const window: any;
+declare const window: Window & typeof globalThis;
 import winston from "winston";
 import "winston-daily-rotate-file";
 import path from "path";
@@ -17,7 +17,7 @@ const logFormat = winston.format.combine(
   winston.format.json(), // Structured logging (JSON format)
 );
 
-// 判断是否为 Vercel/serverless 环境
+// Check if in Vercel/serverless environment
 const isServerless = !!process.env.VERCEL;
 const isBrowser =
   typeof window !== "undefined" || process.env.BUILD_ENV === "browser";
@@ -29,7 +29,7 @@ if (isBrowser) {
     new winston.transports.Console({ format: winston.format.simple() }),
   );
 } else if (isServerless) {
-  // 只用 Console transport
+  // Only use Console transport
   transports.push(
     new winston.transports.Console({
       format: winston.format.combine(

@@ -1,9 +1,9 @@
 import { RestClientV5 } from "bybit-api";
 
 /**
- * 获取 Bybit 合约的最小下单单位（qtyStep）和最小下单量（minOrderQty）
- * @param symbol 合约名称，如 BTCUSDT
- * @param useTestnet 是否使用测试网
+ * Get Bybit contract minimum order unit (qtyStep) and minimum order quantity (minOrderQty)
+ * @param symbol Contract name, e.g. BTCUSDT
+ * @param useTestnet Whether to use testnet
  */
 export async function getInstrumentInfo(
   symbol: string,

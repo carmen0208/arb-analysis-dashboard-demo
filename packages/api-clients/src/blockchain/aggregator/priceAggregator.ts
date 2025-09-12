@@ -12,8 +12,8 @@ import {
   getOkxDexCandles,
   convertOkxCandlesToPriceData,
   OKX_DEX_CHAIN_INDEX,
-  OkxDexCandleData,
 } from "../okexchange/dex";
+import { OkxDexCandleData } from "../okexchange/types";
 import { getBybitKlineForDays } from "../bybit/perp";
 import { getMarkPriceWithHistory as getBinanceMarkPriceWithHistory } from "../binance/perp";
 import { getMarkPriceWithHistory as getBitgetMarkPriceWithHistory } from "../bitget/perp/markPrice";
@@ -112,7 +112,7 @@ async function fetchBybitPriceData(
     // Get K-line data
     const klineData = await getBybitKlineForDays(bybitSymbol, days, "1");
 
-    if (klineData.length === 0) {
+    if (!klineData.length) {
       logger.warn("[PriceAggregator] No Bybit kline data available", {
         tokenAddress,
         bybitSymbol,
@@ -203,7 +203,7 @@ async function fetchOkxDexPriceData(
       after, // Use before parameter for pagination
     });
 
-    if (candlesData && candlesData.length > 0) {
+    if (candlesData?.length) {
       allCandlesData.push(...candlesData);
 
       // Update remaining minutes (based on actual data points fetched)
@@ -238,7 +238,7 @@ async function fetchOkxDexPriceData(
     }
   }
 
-  if (allCandlesData.length === 0) {
+  if (!allCandlesData.length) {
     return {
       currentPrice: 0,
       historicalData: [],
@@ -309,11 +309,7 @@ async function fetchBinancePriceData(
         binanceSymbol,
         days,
       );
-      if (
-        binanceData &&
-        binanceData.history &&
-        binanceData.history.length > 0
-      ) {
+      if (binanceData && binanceData.history && binanceData.history.length) {
         // Directly use closing price of latest K-line data as current price, just like bybit
         currentPrice =
           binanceData.history[binanceData.history.length - 1]?.price || 0;
@@ -403,7 +399,7 @@ async function fetchBitgetPriceData(
     // Use getMarkPriceWithHistory function from markPrice.ts to get data
     const bitgetData = await getBitgetMarkPriceWithHistory(bitgetSymbol, days);
 
-    if (!bitgetData || !bitgetData.history || bitgetData.history.length === 0) {
+    if (!bitgetData?.history?.length) {
       logger.warn("[PriceAggregator] No Bitget mark price data available", {
         tokenAddress,
         bitgetSymbol,

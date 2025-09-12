@@ -1,13 +1,13 @@
 /**
- * OKX DEX API 认证和签名工具
- * 处理OKX API请求的签名生成
+ * OKX DEX API authentication and signing utilities
+ * Handles OKX API request signature generation
  */
 
 import CryptoJS from "crypto-js";
 import { OkxDexConfig, validateConfig } from "./config";
 
 /**
- * 生成OKX DEX API请求头（带签名）
+ * Generate OKX DEX API request headers (with signature)
  */
 export const createOkxDexHeaders =
   (config: OkxDexConfig) =>
@@ -34,7 +34,7 @@ export const createOkxDexHeaders =
   };
 
 /**
- * 创建带签名的请求头的便捷函数
+ * Convenience function to create request headers with signature
  */
 export const createSignedHeaders = (
   config: OkxDexConfig,

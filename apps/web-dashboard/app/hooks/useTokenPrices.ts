@@ -6,6 +6,7 @@ import {
   MultiSourcePriceData,
   PriceDataPoint,
 } from "@dex-ai/api-clients/types";
+import { getApiKey, hasValidApiKey } from "../../lib/security/apiKeyStorage";
 
 interface UseTokenPricesOptions {
   platform?: BlockchainPlatform;
@@ -53,9 +54,15 @@ export function useTokenPrices(
     setError(null);
 
     try {
-      const apiKey = localStorage.getItem("api-key");
+      if (!hasValidApiKey()) {
+        throw new Error(
+          "Valid API key not found. Please configure your API key.",
+        );
+      }
+
+      const apiKey = getApiKey();
       if (!apiKey) {
-        throw new Error("API key not found");
+        throw new Error("API key retrieval failed");
       }
       const params = new URLSearchParams({
         symbol: tokenSymbol,

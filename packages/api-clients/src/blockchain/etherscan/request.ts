@@ -10,6 +10,7 @@ import {
   EtherscanResponse,
   EtherscanError,
 } from "./types";
+import type { ApiErrorContext } from "../../common/types";
 
 const logger: Logger = getLogger("etherscan-request");
 
@@ -19,7 +20,7 @@ const logger: Logger = getLogger("etherscan-request");
 export async function makeApiRequest<T>(
   client: AxiosInstance,
   params: TokenTransactionParams | BlockParams,
-  errorContext: Record<string, any> = {},
+  errorContext: ApiErrorContext = {},
 ): Promise<AxiosResponse<EtherscanResponse<T>>> {
   const requestContext = {
     ...params,

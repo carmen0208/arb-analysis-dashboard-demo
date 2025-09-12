@@ -1,22 +1,34 @@
 /**
  * OKX DEX API Integration
- * 统一导出所有OKX DEX相关功能
+ * Unified export of all OKX DEX related functionality
  */
 
-// 配置管理
+// Configuration management
 export * from "./config";
 
-// 认证和签名
+// Authentication and signing
 export * from "./auth";
 
-// DEX核心功能
+// DEX core functionality
 export * from "./dex";
 
-// 重新导出常用类型（为了向后兼容）
+// Re-export commonly used types (for backward compatibility)
 export type { SwapQuote } from "../types";
 
+// Export OKX DEX specific types
+export type {
+  SwapDataResponse,
+  ApproveTransactionResponse,
+  SwapQuoteResponse,
+  BatchPriceResponse,
+  CandleDataResponse,
+  OkxApiError,
+  ApiResult,
+  RetryConfig,
+} from "./types";
+
 /**
- * 使用示例:
+ * Usage example:
  *
  * import { createOkxDexClient, OkxDexConfig } from "@dex-ai/api-clients/blockchain/okexchange";
  *

@@ -1,4 +1,4 @@
-import { getLogger, Logger } from "@dex-ai/core";
+import { getLogger, Logger, TIME_CONSTANTS } from "@dex-ai/core";
 import { ERC20_ABI } from "../abis";
 import {
   V3PoolConfig,
@@ -34,7 +34,11 @@ function getFromCache<T>(key: string): T | null {
   return item.data as T;
 }
 
-function setCache<T>(key: string, data: T, ttl: number = 300000): void {
+function setCache<T>(
+  key: string,
+  data: T,
+  ttl: number = TIME_CONSTANTS.DEFAULT_CACHE_TTL,
+): void {
   memoryCache.set(key, {
     data,
     expires: Date.now() + ttl,
@@ -105,7 +109,7 @@ export async function getTokenInfo(
     };
 
     // Cache result (5 minutes)
-    setCache(cacheKey, tokenInfo, 300000);
+    setCache(cacheKey, tokenInfo, TIME_CONSTANTS.DEFAULT_CACHE_TTL);
 
     logger.info("[TokenInfo] Fetched token info", {
       tokenAddress,
@@ -198,7 +202,7 @@ export async function getBatchTokenInfo(
   }
 
   // Batch fetch uncached token information
-  if (uncachedAddresses.length > 0) {
+  if (uncachedAddresses.length) {
     const client = createClient(finalConfig);
 
     try {
@@ -249,7 +253,7 @@ export async function getBatchTokenInfo(
 
         // Cache result
         const cacheKey = `token_info_${finalConfig.chainId}_${address.toLowerCase()}`;
-        setCache(cacheKey, tokenInfo, 300000);
+        setCache(cacheKey, tokenInfo, TIME_CONSTANTS.DEFAULT_CACHE_TTL);
 
         result[address] = tokenInfo;
       }

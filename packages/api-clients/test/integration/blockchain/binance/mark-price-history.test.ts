@@ -5,7 +5,7 @@ import {
 } from "../../../../src/blockchain/binance/perp";
 
 describe("Binance Mark Price History Integration", () => {
-  const testSymbol = "BTCUSDT"; // 使用 BTCUSDT 作为测试符号
+  const testSymbol = "BTCUSDT"; // Use BTCUSDT as test symbol
 
   describe("getMarkPriceKlines", () => {
     it("should fetch klines data for BTCUSDT", async () => {
@@ -16,7 +16,7 @@ describe("Binance Mark Price History Integration", () => {
         expect(klines.length).toBeGreaterThan(0);
         expect(klines.length).toBeLessThanOrEqual(10);
 
-        // 验证数据结构
+        // Verify data structure
         const firstKline = klines[0];
         expect(firstKline).toHaveProperty("timestamp");
         expect(firstKline).toHaveProperty("open");
@@ -34,7 +34,7 @@ describe("Binance Mark Price History Integration", () => {
         expect(typeof firstKline.volume).toBe("number");
         expect(firstKline.source).toBe("binance");
 
-        // 验证价格逻辑
+        // Verify price logic
         expect(firstKline.high).toBeGreaterThanOrEqual(firstKline.open);
         expect(firstKline.high).toBeGreaterThanOrEqual(firstKline.close);
         expect(firstKline.low).toBeLessThanOrEqual(firstKline.open);
@@ -71,7 +71,7 @@ describe("Binance Mark Price History Integration", () => {
         expect(Array.isArray(history)).toBe(true);
         expect(history.length).toBeGreaterThan(0);
 
-        // 验证数据结构
+        // Verify data structure
         const firstPrice = history[0];
         expect(firstPrice).toHaveProperty("timestamp");
         expect(firstPrice).toHaveProperty("price");
@@ -81,7 +81,7 @@ describe("Binance Mark Price History Integration", () => {
         expect(typeof firstPrice.price).toBe("number");
         expect(firstPrice.source).toBe("binance");
 
-        // 验证价格为正数
+        // Verify prices are positive
         expect(firstPrice.price).toBeGreaterThan(0);
       }
     }, 15000);
@@ -96,7 +96,7 @@ describe("Binance Mark Price History Integration", () => {
         if (history) {
           expect(history.length).toBeGreaterThan(0);
 
-          // 验证时间戳是递增的
+          // Verify timestamps are ascending
           for (let i = 1; i < history.length; i++) {
             expect(history[i].timestamp).toBeGreaterThan(
               history[i - 1].timestamp,

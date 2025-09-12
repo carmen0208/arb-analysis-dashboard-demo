@@ -7,6 +7,8 @@ import SearchBar from "../components/SearchBar";
 import TokenChart from "../components/TokenChart";
 import TokenInfo from "../components/TokenInfo";
 import TokenAnalysis from "../components/TokenAnalysis";
+import ApiKeyConfig from "../components/ApiKeyConfig";
+import { hasValidApiKey, getApiKey } from "../../../lib/security/apiKeyStorage";
 
 export default function TokenDetailPage() {
   const params = useParams();
@@ -14,6 +16,7 @@ export default function TokenDetailPage() {
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showApiKeyConfig, setShowApiKeyConfig] = useState(false);
 
   const tokenAddress = params.address as string;
 
@@ -29,9 +32,17 @@ export default function TokenDetailPage() {
     setError(null);
 
     try {
-      const apiKey = localStorage.getItem("api-key");
+      if (!hasValidApiKey()) {
+        setShowApiKeyConfig(true);
+        throw new Error(
+          "Valid API key not found. Please configure your API key.",
+        );
+      }
+
+      const apiKey = getApiKey();
       if (!apiKey) {
-        throw new Error("API key not found");
+        setShowApiKeyConfig(true);
+        throw new Error("API key retrieval failed");
       }
 
       const response = await fetch(`/api/tokens/${address}`, {
@@ -81,18 +92,45 @@ export default function TokenDetailPage() {
         <div className="w-full max-w-2xl mx-auto mb-6">
           <SearchBar onTokenSelect={handleTokenSelect} />
         </div>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center text-red-500">
-            <p>Error loading token data:</p>
-            <p className="text-sm mt-2">{error}</p>
-            <button
-              onClick={() => loadTokenData(tokenAddress)}
-              className="mt-4 px-4 py-2 bg-gruvbox-orange text-black rounded hover:bg-gruvbox-orange/80"
-            >
-              Retry
-            </button>
+
+        {showApiKeyConfig ? (
+          <div className="flex items-center justify-center min-h-64">
+            <div className="w-full max-w-md">
+              <ApiKeyConfig
+                onApiKeyChange={(hasValidKey) => {
+                  if (hasValidKey) {
+                    setShowApiKeyConfig(false);
+                    setError(null);
+                    loadTokenData(tokenAddress);
+                  }
+                }}
+              />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center text-red-500">
+              <p>Error loading token data:</p>
+              <p className="text-sm mt-2">{error}</p>
+              <div className="mt-4 space-x-2">
+                <button
+                  onClick={() => loadTokenData(tokenAddress)}
+                  className="px-4 py-2 bg-gruvbox-orange text-black rounded hover:bg-gruvbox-orange/80"
+                >
+                  Retry
+                </button>
+                {error.includes("API key") && (
+                  <button
+                    onClick={() => setShowApiKeyConfig(true)}
+                    className="px-4 py-2 bg-gruvbox-blue text-white rounded hover:bg-gruvbox-blue/80"
+                  >
+                    Configure API Key
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -58,51 +58,51 @@ describe("LayerZeroClient", () => {
         const cookieDAOAddress = "0xc0041ef357b183448b235a8ea73ce4e4ec8c265f";
         const sourceChain = "bsc";
 
-        console.log("🔧 测试 validateOFTConfiguration 函数:");
-        console.log("合约地址:", cookieDAOAddress);
-        console.log("源链:", sourceChain);
+        console.log("🔧 Testing validateOFTConfiguration function:");
+        console.log("Contract address:", cookieDAOAddress);
+        console.log("Source chain:", sourceChain);
 
         const result = await validateOFTConfiguration(
           cookieDAOAddress,
           sourceChain,
         );
 
-        console.log("✅ OFT配置验证完成!");
-        console.log("  是否有效:", result.isValid);
-        console.log("  问题数量:", result.issues.length);
-        console.log("  总链数:", result.summary.totalChains);
-        console.log("  有效链数:", result.summary.validChains);
-        console.log("  配置数量:", result.summary.configurations);
+        console.log("✅ OFT configuration validation completed!");
+        console.log("  Is valid:", result.isValid);
+        console.log("  Issue count:", result.issues.length);
+        console.log("  Total chains:", result.summary.totalChains);
+        console.log("  Valid chains:", result.summary.validChains);
+        console.log("  Configuration count:", result.summary.configurations);
 
-        // 基本属性验证
+        // Basic property validation
         expect(result).toHaveProperty("isValid");
         expect(result).toHaveProperty("issues");
         expect(result).toHaveProperty("summary");
 
-        // 类型验证
+        // Type validation
         expect(typeof result.isValid).toBe("boolean");
         expect(Array.isArray(result.issues)).toBe(true);
         expect(typeof result.summary).toBe("object");
 
-        // 摘要属性验证
+        // Summary property validation
         expect(result.summary).toHaveProperty("totalChains");
         expect(result.summary).toHaveProperty("validChains");
         expect(result.summary).toHaveProperty("configurations");
 
-        // 业务逻辑验证
+        // Business logic validation
         expect(result.summary.totalChains).toBeGreaterThan(0);
         expect(result.summary.validChains).toBeGreaterThan(0);
         expect(result.summary.configurations).toBeGreaterThan(0);
 
-        // 如果有问题，验证问题结构
+        // If there are issues, verify issue structure
         if (result.issues.length > 0) {
-          console.log("\n⚠️ 发现的问题:");
+          console.log("\n⚠️ Issues found:");
           result.issues.forEach((issue, index) => {
             console.log(
-              `  ${index + 1}. 链: ${issue.chain}, 问题: ${issue.issue}, 严重性: ${issue.severity}`,
+              `  ${index + 1}. Chain: ${issue.chain}, Issue: ${issue.issue}, Severity: ${issue.severity}`,
             );
 
-            // 验证问题结构
+            // Verify issue structure
             expect(issue).toHaveProperty("chain");
             expect(issue).toHaveProperty("issue");
             expect(issue).toHaveProperty("severity");
@@ -114,7 +114,7 @@ describe("LayerZeroClient", () => {
 
         await delay(testConfig.delays.betweenCalls);
       },
-      testConfig.timeouts.rpc * 3, // 给更多时间，因为需要获取配置
+      testConfig.timeouts.rpc * 3, // Give more time as configuration needs to be fetched
     );
 
     it(
@@ -123,28 +123,30 @@ describe("LayerZeroClient", () => {
         const contractAddress = testConfig.contracts.ethena_sUSDe_ethereum;
         const sourceChain = "ethereum";
 
-        console.log("\n🔧 测试 Ethena sUSDe 合约配置验证:");
-        console.log("合约地址:", contractAddress);
-        console.log("源链:", sourceChain);
+        console.log(
+          "\n🔧 Testing Ethena sUSDe contract configuration validation:",
+        );
+        console.log("Contract address:", contractAddress);
+        console.log("Source chain:", sourceChain);
 
         const result = await validateOFTConfiguration(
           contractAddress,
           sourceChain,
         );
 
-        console.log("✅ Ethena sUSDe 配置验证完成!");
-        console.log("  是否有效:", result.isValid);
-        console.log("  问题数量:", result.issues.length);
-        console.log("  总链数:", result.summary.totalChains);
-        console.log("  有效链数:", result.summary.validChains);
-        console.log("  配置数量:", result.summary.configurations);
+        console.log("✅ Ethena sUSDe configuration validation completed!");
+        console.log("  Is valid:", result.isValid);
+        console.log("  Issue count:", result.issues.length);
+        console.log("  Total chains:", result.summary.totalChains);
+        console.log("  Valid chains:", result.summary.validChains);
+        console.log("  Configuration count:", result.summary.configurations);
 
-        // 基本验证
+        // Basic validation
         expect(result).toHaveProperty("isValid");
         expect(result).toHaveProperty("issues");
         expect(result).toHaveProperty("summary");
 
-        // 业务逻辑验证
+        // Business logic validation
         expect(result.summary.totalChains).toBeGreaterThan(0);
         expect(result.summary.validChains).toBeGreaterThan(0);
 
@@ -161,9 +163,11 @@ describe("LayerZeroClient", () => {
         const cookieDAOAddress = "0xc0041ef357b183448b235a8ea73ce4e4ec8c265f";
         const sourceChain = "bsc";
 
-        console.log("\n🔧 测试 analyzeOFT 函数 (包含配置):");
-        console.log("合约地址:", cookieDAOAddress);
-        console.log("源链:", sourceChain);
+        console.log(
+          "\n🔧 Testing analyzeOFT function (including configuration):",
+        );
+        console.log("Contract address:", cookieDAOAddress);
+        console.log("Source chain:", sourceChain);
 
         const result = await LayerZeroClient.analyzeOFT(
           cookieDAOAddress,
@@ -171,43 +175,46 @@ describe("LayerZeroClient", () => {
           { includeConfigs: true },
         );
 
-        console.log("✅ OFT分析完成!");
-        console.log("  合约类型:", result.contractType);
-        console.log("  Peers数量:", result.peers.length);
-        console.log("  支持的链数量:", result.supportedChains.length);
-        console.log("  桥接配置数量:", result.bridgeConfigs.length);
+        console.log("✅ OFT analysis completed!");
+        console.log("  Contract type:", result.contractType);
+        console.log("  Peers count:", result.peers.length);
+        console.log("  Supported chains count:", result.supportedChains.length);
+        console.log(
+          "  Bridge configurations count:",
+          result.bridgeConfigs.length,
+        );
 
-        // 基本属性验证
+        // Basic property validation
         expect(result).toHaveProperty("contractType");
         expect(result).toHaveProperty("peers");
         expect(result).toHaveProperty("supportedChains");
         expect(result).toHaveProperty("bridgeConfigs");
 
-        // 类型验证
+        // Type validation
         expect(typeof result.contractType).toBe("string");
         expect(Array.isArray(result.peers)).toBe(true);
         expect(Array.isArray(result.supportedChains)).toBe(true);
         expect(Array.isArray(result.bridgeConfigs)).toBe(true);
 
-        // 业务逻辑验证
+        // Business logic validation
         expect(result.peers.length).toBeGreaterThan(0);
         expect(result.supportedChains.length).toBeGreaterThan(0);
         expect(result.bridgeConfigs.length).toBeGreaterThan(0);
 
-        // 验证桥接配置结构
+        // Verify bridge configuration structure
         if (result.bridgeConfigs.length > 0) {
-          console.log("\n📤 第一个桥接配置:");
+          console.log("\n📤 First bridge configuration:");
           const firstConfig = result.bridgeConfigs[0];
 
           expect(firstConfig).toHaveProperty("fromChain");
           expect(firstConfig).toHaveProperty("toChain");
           expect(firstConfig).toHaveProperty("isAvailable");
 
-          console.log("  从链:", firstConfig.fromChain);
-          console.log("  到链:", firstConfig.toChain);
-          console.log("  是否可用:", firstConfig.isAvailable);
+          console.log("  From chain:", firstConfig.fromChain);
+          console.log("  To chain:", firstConfig.toChain);
+          console.log("  Is available:", firstConfig.isAvailable);
 
-          // 验证执行器配置
+          // Verify executor configuration
           if (firstConfig.executorConfig) {
             expect(firstConfig.executorConfig).toHaveProperty(
               "executorAddress",
@@ -216,23 +223,23 @@ describe("LayerZeroClient", () => {
             expect(firstConfig.executorConfig).toHaveProperty("executorFeeCap");
 
             console.log(
-              "  执行器地址:",
+              "  Executor address:",
               firstConfig.executorConfig.executorAddress,
             );
           }
 
-          // 验证DVN配置
+          // Verify DVN configuration
           if (firstConfig.dvnConfig) {
             expect(firstConfig.dvnConfig).toHaveProperty("address");
             expect(firstConfig.dvnConfig).toHaveProperty("canonicalName");
             expect(firstConfig.dvnConfig).toHaveProperty("threshold");
             expect(firstConfig.dvnConfig).toHaveProperty("requiredDVNs");
 
-            console.log("  DVN地址:", firstConfig.dvnConfig.address);
-            console.log("  DVN名称:", firstConfig.dvnConfig.canonicalName);
-            console.log("  DVN阈值:", firstConfig.dvnConfig.threshold);
+            console.log("  DVN address:", firstConfig.dvnConfig.address);
+            console.log("  DVN name:", firstConfig.dvnConfig.canonicalName);
+            console.log("  DVN threshold:", firstConfig.dvnConfig.threshold);
             console.log(
-              "  必需DVN数量:",
+              "  Required DVN count:",
               firstConfig.dvnConfig.requiredDVNs?.length || 0,
             );
           }
@@ -251,9 +258,9 @@ describe("LayerZeroClient", () => {
         const invalidAddress = "0x0000000000000000000000000000000000000000";
         const sourceChain = "ethereum";
 
-        console.log("\n🔧 测试无效合约地址处理:");
-        console.log("合约地址:", invalidAddress);
-        console.log("源链:", sourceChain);
+        console.log("\n🔧 Testing invalid contract address handling:");
+        console.log("Contract address:", invalidAddress);
+        console.log("Source chain:", sourceChain);
 
         try {
           const result = await validateOFTConfiguration(
@@ -261,16 +268,16 @@ describe("LayerZeroClient", () => {
             sourceChain,
           );
 
-          // 如果返回结果，验证错误处理
+          // If result is returned, verify error handling
           if (result) {
             expect(result.isValid).toBe(false);
             expect(result.issues.length).toBeGreaterThan(0);
           }
         } catch (error) {
-          // 如果抛出错误，验证错误信息
+          // If error is thrown, verify error message
           expect(error).toBeInstanceOf(Error);
           console.log(
-            "❌ 预期错误:",
+            "❌ Expected error:",
             error instanceof Error ? error.message : String(error),
           );
         }
@@ -286,9 +293,9 @@ describe("LayerZeroClient", () => {
         const contractAddress = testConfig.contracts.ethena_sUSDe_ethereum;
         const unsupportedChain = "unsupported_chain" as any;
 
-        console.log("\n🔧 测试不支持的链处理:");
-        console.log("合约地址:", contractAddress);
-        console.log("源链:", unsupportedChain);
+        console.log("\n🔧 Testing unsupported chain handling:");
+        console.log("Contract address:", contractAddress);
+        console.log("Source chain:", unsupportedChain);
 
         try {
           const result = await validateOFTConfiguration(
@@ -296,16 +303,16 @@ describe("LayerZeroClient", () => {
             unsupportedChain,
           );
 
-          // 如果返回结果，验证错误处理
+          // If result is returned, verify error handling
           if (result) {
             expect(result.isValid).toBe(false);
             expect(result.issues.length).toBeGreaterThan(0);
           }
         } catch (error) {
-          // 如果抛出错误，验证错误信息
+          // If error is thrown, verify error message
           expect(error).toBeInstanceOf(Error);
           console.log(
-            "❌ 预期错误:",
+            "❌ Expected error:",
             error instanceof Error ? error.message : String(error),
           );
         }

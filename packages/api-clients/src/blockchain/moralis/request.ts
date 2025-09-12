@@ -1,5 +1,6 @@
 import { withRetry } from "@dex-ai/core";
 import { getLogger, Logger } from "@dex-ai/core";
+import type { ApiRequestParams } from "../../common/types";
 const logger: Logger = getLogger("blockchain-moralis");
 
 /**
@@ -9,7 +10,7 @@ const logger: Logger = getLogger("blockchain-moralis");
  * @param operationName A descriptive name for the operation for logging purposes.
  * @returns The result of the Moralis SDK function call.
  */
-export async function makeMoralisRequest<P extends Record<string, any>, R>(
+export async function makeMoralisRequest<P extends ApiRequestParams, R>(
   moralisFunction: (params: P) => Promise<R>,
   params: P,
   operationName: string,

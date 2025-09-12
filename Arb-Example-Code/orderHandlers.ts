@@ -8,6 +8,7 @@ import {
 import { Account, WalletClient } from "viem";
 import { BybitCredentials } from "@/app/utils/bybitAuth";
 import { BitgetCredentials } from "@/app/utils/bitgetAuth";
+import { EXCHANGE } from "@dex-ai/api-clients/types";
 
 export type OrderParams = {
   pair: DexPairWithPrice;
@@ -47,7 +48,7 @@ export type OrderHandler = {
 };
 
 export const exchangeHandlers: Record<string, OrderHandler> = {
-  "okx dex": {
+  [EXCHANGE.OKX_DEX]: {
     open: async ({ pair, amount, account, walletClient }) =>
       performSwap(
         amount,
@@ -58,7 +59,7 @@ export const exchangeHandlers: Record<string, OrderHandler> = {
     close: async ({ pair, account, walletClient }) =>
       performSwapBack(pair, account as Account, walletClient as WalletClient),
   },
-  "Bybit Futures": {
+  [EXCHANGE.BYBIT_FUTURES]: {
     open: async ({ pair, amount, bybitCredentials, getApiKey }) =>
       handleBybitOpenShort(
         amount,
@@ -73,7 +74,7 @@ export const exchangeHandlers: Record<string, OrderHandler> = {
         getApiKey as () => string,
       ),
   },
-  "Bitget Futures": {
+  [EXCHANGE.BITGET_FUTURES]: {
     open: async ({ pair, amount, bitgetCredentials, getApiKey }) =>
       handleBitgetOpenShort(
         amount,
@@ -88,7 +89,7 @@ export const exchangeHandlers: Record<string, OrderHandler> = {
         getApiKey as () => string,
       ),
   },
-  "Binance Futures": {
+  [EXCHANGE.BINANCE_FUTURES]: {
     open: async ({ pair, amount, binanceCredentials, getApiKey }) =>
       handleBitgetOpenShort(
         amount,

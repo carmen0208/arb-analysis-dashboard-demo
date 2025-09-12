@@ -3,7 +3,7 @@ import { getLogger, Logger } from "@dex-ai/core";
 
 const logger: Logger = getLogger("bybit-perp-kline");
 
-// 使用Bybit API的原生类型
+// Use Bybit API native types
 export type BybitKlineInterval =
   | "1"
   | "3"
@@ -34,13 +34,13 @@ export interface BybitKlineResponse {
 }
 
 /**
- * 获取 Bybit K线数据
- * @param symbol 交易对符号，例如 "BTCUSDT"
- * @param interval K线间隔，例如 "1", "5", "15", "30", "60", "120", "240", "360", "720", "D", "M", "W"
- * @param start 开始时间戳（毫秒）
- * @param end 结束时间戳（毫秒）
- * @param limit 限制数量，最大1000，默认200
- * @returns K线数据
+ * Get Bybit K-line data
+ * @param symbol Trading pair symbol, e.g. "BTCUSDT"
+ * @param interval K-line interval, e.g. "1", "5", "15", "30", "60", "120", "240", "360", "720", "D", "M", "W"
+ * @param start Start timestamp (milliseconds)
+ * @param end End timestamp (milliseconds)
+ * @param limit Limit count, maximum 1000, default 200
+ * @returns K-line data
  */
 export async function getBybitKline(
   symbol: string,
@@ -59,15 +59,6 @@ export async function getBybitKline(
       end,
       limit,
     });
-
-    // const response = await client.getKline({
-    //   category: "linear",
-    //   symbol,
-    //   interval,
-    //   start,
-    //   end,
-    //   limit,
-    // });
 
     const response = await client.getMarkPriceKline({
       category: "linear",
@@ -92,7 +83,7 @@ export async function getBybitKline(
       dataPoints: response.result?.list?.length || 0,
     });
 
-    // 转换API响应到我们的类型
+    // Convert API response to our types
     if (response.result) {
       return {
         symbol: response.result.symbol,
@@ -118,13 +109,13 @@ export async function getBybitKline(
 }
 
 /**
- * 获取 Bybit Mark Price K线数据
- * @param symbol 交易对符号，例如 "BTCUSDT"
- * @param interval K线间隔
- * @param start 开始时间戳（毫秒）
- * @param end 结束时间戳（毫秒）
- * @param limit 限制数量
- * @returns Mark Price K线数据
+ * Get Bybit Mark Price K-line data
+ * @param symbol Trading pair symbol, e.g. "BTCUSDT"
+ * @param interval K-line interval
+ * @param start Start timestamp (milliseconds)
+ * @param end End timestamp (milliseconds)
+ * @param limit Limit count
+ * @returns Mark Price K-line data
  */
 export async function getBybitMarkPriceKline(
   symbol: string,
@@ -170,7 +161,7 @@ export async function getBybitMarkPriceKline(
       },
     );
 
-    // 转换API响应到我们的类型
+    // Convert API response to our types
     if (response.result) {
       return {
         symbol: response.result.symbol,
@@ -199,9 +190,9 @@ export async function getBybitMarkPriceKline(
 }
 
 /**
- * 将 Bybit K线数据转换为价格数据点
- * @param klineData Bybit K线数据
- * @returns 价格数据点数组
+ * Convert Bybit K-line data to price data points
+ * @param klineData Bybit K-line data
+ * @returns Price data points array
  */
 export function convertBybitKlineToPriceData(
   klineData: BybitKlineData[],
@@ -214,22 +205,22 @@ export function convertBybitKlineToPriceData(
 }
 
 /**
- * 获取指定天数的 Bybit K线数据（支持分页）
- * @param symbol 交易对符号
- * @param days 天数
- * @param interval K线间隔，默认1分钟
- * @returns 价格数据点数组
+ * Get Bybit K-line data for specified days (supports pagination)
+ * @param symbol Trading pair symbol
+ * @param days Number of days
+ * @param interval K-line interval, default 1 minute
+ * @returns Price data points array
  */
 export async function getBybitKlineForDays(
   symbol: string,
   days: number,
   interval: BybitKlineInterval = "1",
 ): Promise<Array<{ timestamp: number; price: number; source: string }>> {
-  const maxLimitPerRequest = 1000; // Bybit API 单次最大限制
-  const minutesPerDay = 1440; // 1天 = 1440分钟
+  const maxLimitPerRequest = 1000; // Bybit API single request maximum limit
+  const minutesPerDay = 1440; // 1 day = 1440 minutes
   const totalMinutes = days * minutesPerDay;
 
-  // 计算需要多少次请求
+  // Calculate how many requests are needed
   const numRequests = Math.ceil(totalMinutes / maxLimitPerRequest);
 
   logger.info("[Bybit Kline] Pagination calculation", {
@@ -241,8 +232,8 @@ export async function getBybitKlineForDays(
   });
 
   const allKlineData: BybitKlineData[] = [];
-  let endTime: number | undefined; // 用于分页的时间戳
-  let remainingMinutes = totalMinutes; // 跟踪剩余需要获取的分钟数
+  let endTime: number | undefined; // Timestamp for pagination
+  let remainingMinutes = totalMinutes; // Track remaining minutes to fetch
 
   for (let i = 0; i < numRequests; i++) {
     const limit = Math.min(maxLimitPerRequest, remainingMinutes);
@@ -269,10 +260,10 @@ export async function getBybitKlineForDays(
     if (klineResponse && klineResponse.list && klineResponse.list.length > 0) {
       allKlineData.push(...klineResponse.list);
 
-      // 更新剩余分钟数（基于实际获取的数据点数量）
+      // Update remaining minutes (based on actual data points fetched)
       remainingMinutes -= klineResponse.list.length;
 
-      // 为下一次请求设置endTime参数（使用最早的时间戳）
+      // Set endTime parameter for next request (using earliest timestamp)
       const earliestTimestamp = Math.min(
         ...klineResponse.list.map((kline) => Number(kline.startTime)),
       );
@@ -287,7 +278,7 @@ export async function getBybitKlineForDays(
         nextEndTime: endTime,
       });
     } else {
-      // 如果没有更多数据，退出循环
+      // If no more data, exit loop
       logger.debug("[Bybit Kline] No more data available", {
         symbol,
         requestIndex: i + 1,
@@ -295,7 +286,7 @@ export async function getBybitKlineForDays(
       break;
     }
 
-    // 添加延迟避免API限制
+    // Add delay to avoid API limits
     if (i < numRequests - 1) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
@@ -305,7 +296,7 @@ export async function getBybitKlineForDays(
     return [];
   }
 
-  // 按时间戳排序（从早到晚）
+  // Sort by timestamp (earliest to latest)
   allKlineData.sort((a, b) => Number(a.startTime) - Number(b.startTime));
 
   return convertBybitKlineToPriceData(allKlineData);

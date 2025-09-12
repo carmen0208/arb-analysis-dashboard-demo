@@ -1,4 +1,5 @@
 import type { CacheAdapter } from "../types";
+import { TIME_CONSTANTS } from "../constants";
 
 // In-memory cache storage
 const memoryStore = new Map<string, { data: any; expires: number }>();
@@ -23,7 +24,7 @@ export function getFromMemoryCache<T>(
 export function saveToMemoryCache<T>(
   cacheName: string,
   data: T,
-  ttl: number = 60000, // Default 1 minute
+  ttl: number = TIME_CONSTANTS.SHORT_CACHE_TTL,
   ...keys: string[]
 ): void {
   const key = `${cacheName}_${keys.join("_")}`;

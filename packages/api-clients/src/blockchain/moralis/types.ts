@@ -50,9 +50,3 @@ export interface PoolTransaction {
   timestamp: string;
   type: "swap" | "transfer" | string;
 }
-
-export interface ClassificationResult {
-  address: string;
-  type: "smart" | "sniper" | "whale";
-  reason: string;
-}

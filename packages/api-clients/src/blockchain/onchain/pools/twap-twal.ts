@@ -2,6 +2,9 @@ import { createClient } from "../client";
 import { DEFAULT_CONFIG, V3PoolConfig } from "./config";
 import { UNISWAP_V3_POOL_ABI } from "../abis";
 import { getPoolBaseInfo, calculateTokenRatios } from "./core";
+import { getLogger } from "@dex-ai/core";
+
+const logger = getLogger("twap-twal");
 
 // --- Constants ---
 const SECONDS_AGO = 60; // For 1-minute TWAP & TWAL
@@ -132,7 +135,7 @@ export async function getTWAP(
   } catch (error) {
     // Handle "OLD" error - observation data is too old
     if (error instanceof Error && error.message.includes("OLD")) {
-      console.warn(
+      logger.warn(
         `TWAP observation data too old for pool ${poolAddress}, using current state only`,
       );
       return {
@@ -240,7 +243,7 @@ export async function getTWAL(
   } catch (error) {
     // Handle "OLD" error - observation data is too old
     if (error instanceof Error && error.message.includes("OLD")) {
-      console.warn(
+      logger.warn(
         `TWAL observation data too old for pool ${poolAddress}, using current state only`,
       );
       return {

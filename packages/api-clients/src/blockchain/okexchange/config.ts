@@ -1,13 +1,18 @@
 /**
- * OKX DEX API 配置管理
- * 处理配置接口定义、环境变量解析和配置验证
+ * OKX DEX API Configuration Management
+ * Handles configuration interface definitions, environment variable parsing, and configuration validation
  */
 
-import { getLogger, Logger } from "@dex-ai/core";
+import {
+  getLogger,
+  Logger,
+  validateEnvForService,
+  maskSensitiveValue,
+} from "@dex-ai/core";
 const logger: Logger = getLogger("blockchain-okexchange");
 
 /**
- * OKX DEX API配置接口
+ * OKX DEX API Configuration Interface
  */
 export interface OkxDexConfig {
   apiKey: string;
@@ -17,7 +22,7 @@ export interface OkxDexConfig {
 }
 
 /**
- * OKX DEX多配置接口（用于轮换）
+ * OKX DEX Multi-Configuration Interface (for rotation)
  */
 export interface OkxDexMultiConfig {
   configs: OkxDexConfig[];
@@ -25,18 +30,37 @@ export interface OkxDexMultiConfig {
 }
 
 /**
- * 从环境变量获取默认配置
+ * Get default configuration from environment variables
  */
-export const getDefaultOkxDexConfig = (): OkxDexConfig => ({
-  apiKey: process.env.OKX_ACCESS_DEX_API_KEY || "",
-  secretKey: process.env.OKX_ACCESS_DEX_SECRET_KEY || "",
-  apiPassphrase: process.env.OKX_ACCESS_DEX_PASSPHRASE || "",
-  projectId: process.env.OKX_ACCESS_DEX_PROJECT_ID || "",
-});
+export const getDefaultOkxDexConfig = (): OkxDexConfig => {
+  try {
+    const envConfig = validateEnvForService("okxDex");
+    return {
+      apiKey: envConfig.OKX_ACCESS_DEX_API_KEY,
+      secretKey: envConfig.OKX_ACCESS_DEX_SECRET_KEY,
+      apiPassphrase: envConfig.OKX_ACCESS_DEX_PASSPHRASE,
+      projectId: envConfig.OKX_ACCESS_DEX_PROJECT_ID,
+    };
+  } catch (error) {
+    logger.warn(
+      "[OKX DEX Config] Environment validation failed, using fallback",
+      {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    );
+
+    return {
+      apiKey: process.env.OKX_ACCESS_DEX_API_KEY || "",
+      secretKey: process.env.OKX_ACCESS_DEX_SECRET_KEY || "",
+      apiPassphrase: process.env.OKX_ACCESS_DEX_PASSPHRASE || "",
+      projectId: process.env.OKX_ACCESS_DEX_PROJECT_ID || "",
+    };
+  }
+};
 
 /**
- * 从环境变量获取多配置（用于轮换）
- * 支持格式：OKX_ACCESS_DEX_CONFIGS=key1:secret1:passphrase1:project1,key2:secret2:passphrase2:project2
+ * Get multi-configuration from environment variables (for rotation)
+ * Supports format: OKX_ACCESS_DEX_CONFIGS=key1:secret1:passphrase1:project1,key2:secret2:passphrase2:project2
  */
 export const getMultiOkxDexConfigFromEnv = (): OkxDexMultiConfig => {
   const configsEnv = process.env.OKX_ACCESS_DEX_CONFIGS;
@@ -93,24 +117,32 @@ export const getMultiOkxDexConfigFromEnv = (): OkxDexMultiConfig => {
 };
 
 /**
- * 验证配置是否完整
+ * Validate configuration completeness
  */
 export const validateConfig = (config: OkxDexConfig): void => {
   const { apiKey, secretKey, apiPassphrase, projectId } = config;
   if (!apiKey || !secretKey || !apiPassphrase || !projectId) {
     throw new Error("Missing required OKX DEX configuration");
   }
+
+  // Log masked values for debugging
+  logger.debug("[OKX DEX Config] Validating configuration", {
+    apiKeyMasked: maskSensitiveValue(apiKey),
+    hasSecret: !!secretKey,
+    hasPassphrase: !!apiPassphrase,
+    hasProjectId: !!projectId,
+  });
 };
 
 /**
- * 配置常量
+ * Configuration Constants
  */
 export const OKX_CONFIG_CONSTANTS = {
-  // OKX DEX 率限：1分钟1次调用
-  // RATE_LIMIT_WINDOW: 60000, // 60秒
-  RATE_LIMIT_WINDOW: 1000, // 1秒
-  MAX_WAIT_TIME: 65000, // 最大等待时间：65秒（比率限窗口稍长）
+  // OKX DEX Rate Limit: 1 call per minute
+  // RATE_LIMIT_WINDOW: 60000, // 60 seconds
+  RATE_LIMIT_WINDOW: 1000, // 1 second
+  MAX_WAIT_TIME: 65000, // Maximum wait time: 65 seconds (slightly longer than rate limit window)
   API_BASE_URL: "https://web3.okx.com/api/v5/",
 } as const;
 
-export const DEFAULT_SLIPPAGE = "0.005"; // 默认0.5%
+export const DEFAULT_SLIPPAGE = "0.005"; // Default 0.5%

@@ -94,14 +94,13 @@ export const getPools = async (
     const [v2Pools, v3Pools] = await Promise.all([
       SmartRouter.getV2CandidatePools({
         onChainProvider,
-        v2SubgraphProvider: (_options) => v2SubgraphClient,
-        v3SubgraphProvider: (_options) => v3SubgraphClient,
+        v3SubgraphProvider: (_options: unknown) => v2SubgraphClient,
         currencyA: fromToken,
         currencyB: toToken,
       }),
       SmartRouter.getV3CandidatePools({
         onChainProvider,
-        subgraphProvider: (_options) => v3SubgraphClient,
+        subgraphProvider: (_options: unknown) => v3SubgraphClient,
         currencyA: fromToken,
         currencyB: toToken,
       }),

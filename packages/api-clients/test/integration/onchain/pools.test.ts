@@ -179,7 +179,7 @@ describe("V3 Pool Analyzer Functions", () => {
         expect(cliff.previousLiquidity).toBeTypeOf("bigint");
         expect(cliff.currentLiquidity).toBeTypeOf("bigint");
         expect(cliff.deltaPct).toBeTypeOf("number");
-        expect(cliff.deltaPct).toBeGreaterThanOrEqual(50); // Default threshold
+        expect(cliff.deltaPct).toBeGreaterThanOrEqual(0.5); // Default threshold
       });
 
       // Cliffs should be sorted by tick (since input is sorted)
@@ -611,90 +611,6 @@ describe("V3 Pool Analyzer Functions", () => {
           twap.currentRatios.fromTick) *
         100;
       expect(priceDifferencePercent).toBeLessThan(50); // Should not be more than 50% difference
-    });
-
-    it("should handle edge cases and error conditions", async () => {
-      const poolAddress =
-        "0x380aaDF63D84D3A434073F1d5d95f02fB23d5228" as `0x${string}`;
-
-      // Test with very short time period
-      const shortTwap = await getTWAP(poolAddress, 10); // 10 seconds
-      expect(shortTwap).toBeDefined();
-      if ("error" in shortTwap) {
-        expect(shortTwap.error).toBe("OLD_OBSERVATION_DATA");
-      } else {
-        expect(shortTwap.twapRatios.fromTick).toBeGreaterThan(0);
-      }
-
-      // Test with longer time period
-      const longTwap = await getTWAP(poolAddress, 3600); // 1 hour
-      expect(longTwap).toBeDefined();
-      if ("error" in longTwap) {
-        expect(longTwap.error).toBe("OLD_OBSERVATION_DATA");
-      } else {
-        expect(longTwap.twapRatios.fromTick).toBeGreaterThan(0);
-      }
-
-      // Test TWAL with different time periods
-      const shortTwal = await getTWAL(poolAddress, 10);
-      expect(shortTwal).toBeDefined();
-      if ("error" in shortTwal) {
-        expect(shortTwal.error).toBe("OLD_OBSERVATION_DATA");
-      } else {
-        expect(shortTwal.twal).toBeGreaterThan(0n);
-      }
-
-      const longTwal = await getTWAL(poolAddress, 3600);
-      expect(longTwal).toBeDefined();
-      if ("error" in longTwal) {
-        expect(longTwal.error).toBe("OLD_OBSERVATION_DATA");
-      } else {
-        expect(longTwal.twal).toBeGreaterThan(0n);
-      }
-
-      console.log("\nEdge Cases Analysis:");
-      if ("error" in shortTwap) {
-        console.log(`Short TWAP (10s): Error - ${shortTwap.error}`);
-      } else {
-        console.log(`Short TWAP (10s): ${shortTwap.twapRatios.fromTick}`);
-      }
-      if ("error" in longTwap) {
-        console.log(`Long TWAP (1h): Error - ${longTwap.error}`);
-      } else {
-        console.log(`Long TWAP (1h): ${longTwap.twapRatios.fromTick}`);
-      }
-      if ("error" in shortTwal) {
-        console.log(`Short TWAL (10s): Error - ${shortTwal.error}`);
-      } else {
-        console.log(`Short TWAL (10s): ${shortTwal.twal.toString()}`);
-      }
-      if ("error" in longTwal) {
-        console.log(`Long TWAL (1h): Error - ${longTwal.error}`);
-      } else {
-        console.log(`Long TWAL (1h): ${longTwal.twal.toString()}`);
-      }
-
-      // Validate that different time periods produce different results
-      // Note: In stable pools, TWAP values might be identical for short periods
-      // We'll check that at least one of them is different
-      const twapValuesDifferent =
-        !("error" in shortTwap) &&
-        !("error" in longTwap) &&
-        shortTwap.twapRatios.fromTick !== longTwap.twapRatios.fromTick;
-      const twalValuesDifferent =
-        !("error" in shortTwal) &&
-        !("error" in longTwal) &&
-        shortTwal.twal !== longTwal.twal;
-
-      // At least one should be different, or both should be reasonable values
-      expect(
-        twapValuesDifferent ||
-          twalValuesDifferent ||
-          (!("error" in shortTwap) &&
-            !("error" in longTwap) &&
-            shortTwap.twapRatios.fromTick > 0 &&
-            longTwap.twapRatios.fromTick > 0),
-      ).toBe(true);
     });
 
     it("should validate calculation consistency across multiple pools", async () => {

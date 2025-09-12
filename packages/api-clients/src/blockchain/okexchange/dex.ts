@@ -1,6 +1,6 @@
 /**
  * OKX DEX API Client
- * 专注于DEX交换的核心逻辑，使用模块化的配置管理和Rate Limit管理
+ * Focuses on DEX swap core logic with modular configuration management and Rate Limit management
  */
 
 import axios from "axios";
@@ -14,81 +14,28 @@ import {
   DEFAULT_SLIPPAGE,
 } from "./config";
 import { createOkxDexHeaders } from "./auth";
+import type {
+  SwapDataResponse,
+  ApproveTransactionResponse,
+  ApiResult,
+  SwapQuoteParams,
+  SwapDataParams,
+  ApproveTransactionParams,
+  OkxDexCandlesParams,
+  OkxBatchPriceParams,
+  OkxBatchPriceData,
+  OkxDexCandleData,
+} from "./types";
+
 /**
- * 固定使用 BSC 链 (chainIndex: "56")
- * 暂时不考虑其他链的支持
+ * Fixed to use BSC chain (chainIndex: "56")
+ * Other chains are not considered for now
  */
 export const OKX_DEX_CHAIN_INDEX = "56"; // BSC
 
 /**
- * Swap Quote参数接口
- */
-export interface SwapQuoteParams {
-  fromTokenAddress: string;
-  toTokenAddress: string;
-  amount: string;
-  slippage?: string;
-  chainIndex?: string;
-}
-
-export interface SwapDataParams extends SwapQuoteParams {
-  userWalletAddress: string;
-  swapReceiverAddress?: string;
-}
-
-export interface ApproveTransactionParams {
-  tokenAddress: string;
-  amount: string;
-  chainIndex?: string;
-}
-
-/**
- * OKX Dex Candles 相关类型和函数
- */
-export interface OkxDexCandlesParams {
-  chainIndex: string;
-  tokenContractAddress: string;
-  bar?: string;
-  limit?: number;
-  after?: string;
-  before?: string;
-}
-
-export interface OkxDexCandleData {
-  ts: string; // 时间戳
-  o: string; // 开盘价
-  h: string; // 最高价
-  l: string; // 最低价
-  c: string; // 收盘价
-  vol: string; // 成交量
-  volUsd: string; // 美元成交量
-  confirm: string; // 是否已完成
-}
-
-export interface OkxBatchPriceParams {
-  chainIndex: string;
-  tokenContractAddresses: string[]; // 批量地址
-}
-
-export interface OkxBatchPriceData {
-  chainIndex: string;
-  tokenContractAddress: string;
-  price: string;
-  time: string;
-  marketCap?: string;
-  priceChange5M?: string;
-  priceChange1H?: string;
-  priceChange4H?: string;
-  priceChange24H?: string;
-  volume5M?: string;
-  volume1H?: string;
-  volume4H?: string;
-  volume24H?: string;
-}
-
-/**
- * 创建OKX DEX Client（Functional方式，支持时间窗口管理）
- * ✅ 主动管理率限，避免429错误
+ * Create OKX DEX Client (Functional approach with time window management)
+ * ✅ Proactively manages rate limits to avoid 429 errors
  */
 export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
   const config = multiConfig || getMultiOkxDexConfigFromEnv();
@@ -97,7 +44,7 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
     throw new Error("No valid OKX DEX configurations found");
   }
 
-  // ✅ 使用通用的Rate Limit管理器 (Redis-based)
+  // ✅ Use generic Rate Limit manager (Redis-based)
 
   const rateLimitManager = new RateLimitManager(
     config.configs,
@@ -124,7 +71,7 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
   }
 
   /**
-   * ✅ 获取swap quote（主动时间窗口管理）
+   * ✅ Get swap quote (proactive time window management)
    */
   const getSwapQuote = async (params: SwapQuoteParams): Promise<SwapQuote> => {
     const {
@@ -198,7 +145,7 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
     };
 
     try {
-      // ✅ withRetry仍然有用，以防突发的、非预期内的率限错误
+      // ✅ withRetry is still useful for unexpected rate limit errors
       return await withRetry(operation, {
         maxRetries: rotationEnabled ? 2 : 1,
         retryDelay: 2000,
@@ -231,7 +178,9 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
     }
   };
 
-  const getSwapData = async (params: SwapDataParams): Promise<any> => {
+  const getSwapData = async (
+    params: SwapDataParams,
+  ): Promise<ApiResult<SwapDataResponse>> => {
     const {
       fromTokenAddress,
       toTokenAddress,
@@ -260,7 +209,7 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
     const requestPath = `/api/v5/${path}`;
     const queryString = "?" + new URLSearchParams(queryParams).toString();
 
-    const operation = async (): Promise<any> => {
+    const operation = async (): Promise<SwapDataResponse> => {
       // ✅ Atomically acquire and mark configuration as used
       const { config: selectedConfig, index: configIndex } =
         await rateLimitManager.acquireAndMarkConfigAsUsed();
@@ -311,7 +260,7 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
     };
 
     try {
-      return await withRetry(operation, {
+      const result = await withRetry(operation, {
         maxRetries: rotationEnabled ? 2 : 1,
         retryDelay: 2000,
         shouldRetry: (error: unknown) => {
@@ -332,6 +281,8 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
           });
         },
       });
+
+      return { success: true, data: result };
     } catch (error) {
       logger.error("[OKX DEX] Request failed after rate limit management", {
         fromTokenAddress,
@@ -339,13 +290,16 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
     }
   };
 
   const getApproveTransaction = async (
     params: ApproveTransactionParams,
-  ): Promise<any> => {
+  ): Promise<ApiResult<ApproveTransactionResponse>> => {
     const { tokenAddress, amount, chainIndex = OKX_DEX_CHAIN_INDEX } = params;
 
     const path = "dex/aggregator/approve-transaction";
@@ -359,7 +313,7 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
     const requestPath = `/api/v5/${path}`;
     const queryString = "?" + new URLSearchParams(queryParams).toString();
 
-    const operation = async (): Promise<any> => {
+    const operation = async (): Promise<ApproveTransactionResponse> => {
       // ✅ Atomically acquire and mark configuration as used
       const { config: selectedConfig, index: configIndex } =
         await rateLimitManager.acquireAndMarkConfigAsUsed();
@@ -407,7 +361,7 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
     };
 
     try {
-      return await withRetry(operation, {
+      const result = await withRetry(operation, {
         maxRetries: rotationEnabled ? 2 : 1,
         retryDelay: 2000,
         shouldRetry: (error: unknown) => {
@@ -427,6 +381,8 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
           });
         },
       });
+
+      return { success: true, data: result };
     } catch (error) {
       logger.error("[OKX DEX] Request failed after rate limit management", {
         tokenAddress,
@@ -434,7 +390,10 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
-      throw error;
+      return {
+        success: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
     }
   };
 
@@ -455,30 +414,30 @@ export const createOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
 };
 
 /**
- * 创建具有特定链配置的客户端工厂函数
- * 使用示例:
+ * Create client factory function with specific chain configuration
+ * Usage example:
  *
- * // 1. 使用默认环境变量配置（自动时间窗口管理）
+ * // 1. Use default environment variable configuration (automatic time window management)
  * const client = createOkxDexClient();
  *
- * // 2. 查看配置状态
+ * // 2. Check configuration status
  * console.log(client.getConfigStatus()); // "Config1: Ready, Config2: Cooldown(45s)"
  *
- * // 3. 获取swap quote（自动处理时间窗口和等待）
+ * // 3. Get swap quote (automatically handles time window and waiting)
  * const quote = await client.getSwapQuote({
  *   fromTokenAddress: "0x...",
  *   toTokenAddress: "0x...",
  *   amount: "1000000000000000000",
  * });
  *
- * // 4. 环境变量配置示例：
+ * // 4. Environment variable configuration example:
  * // OKX_ACCESS_DEX_CONFIGS=key1:secret1:pass1:proj1,key2:secret2:pass2:proj2
  *
- * // 5. 配置管理说明：
- * // - 每个key有60秒冷却期
- * // - 自动选择可用的key
- * // - 如果都在冷却期，等待最早的key冷却完成
- * // - 最大等待时间65秒，超过则抛出错误建议增加更多key
+ * // 5. Configuration management notes:
+ * // - Each key has a 60-second cooldown period
+ * // - Automatically selects available keys
+ * // - If all keys are in cooldown, waits for the earliest key to cool down
+ * // - Maximum wait time 65 seconds, throws error if exceeded, suggests adding more keys
  */
 export const createBscOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
   const client = createOkxDexClient(multiConfig);
@@ -501,11 +460,11 @@ export const createBscOkxDexClient = (multiConfig?: OkxDexMultiConfig) => {
   };
 };
 
-// ✅ 重新导出配置类型，保持向后兼容
+// ✅ Re-export configuration types for backward compatibility
 export type { OkxDexConfig, OkxDexMultiConfig } from "./config";
 
 /**
- * 获取 OKX Dex K线数据
+ * Get OKX Dex K-line data
  */
 export const getOkxDexCandles = async (
   params: OkxDexCandlesParams,
@@ -597,7 +556,7 @@ export const getOkxDexCandles = async (
         dataLength: res.data.data.length,
       });
 
-      // 转换数组格式为对象格式，增加边界检查，防止 undefined 值
+      // Convert array format to object format, add boundary checks to prevent undefined values
       return res.data.data.map((arr: string[]) => ({
         ts: arr[0] ?? "",
         o: arr[1] ?? "0",
@@ -654,20 +613,20 @@ export const getOkxDexCandles = async (
 };
 
 /**
- * 将 OKX Dex Candles 数据转换为 PriceDataPoint 数组
+ * Convert OKX Dex Candles data to PriceDataPoint array
  */
 export function convertOkxCandlesToPriceData(
   candles: OkxDexCandleData[],
 ): Array<{ timestamp: number; price: number; source: string }> {
   return candles.map((candle) => ({
     timestamp: Number(candle.ts),
-    price: Number(candle.c), // 使用收盘价
+    price: Number(candle.c), // Use close price
     source: "okx",
   }));
 }
 
 /**
- * 获取 OKX Dex Batch Price - No Rotation
+ * Get OKX Dex Batch Price - No Rotation
  */
 export async function getOkxBatchTokenPrices(
   params: OkxBatchPriceParams,
@@ -783,7 +742,7 @@ export async function getOkxBatchTokenPrices(
   }
 }
 
-// Note: 暂时使用 price 作为 ask1Price 和 bid1Price
+// Note: Temporarily use price as ask1Price and bid1Price
 export function convertOkxBatchPriceToPriceData(
   prices: OkxBatchPriceData[],
 ): Array<{

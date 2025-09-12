@@ -60,7 +60,7 @@ export function detectLargeSpread(
         },
       });
     } else {
-      console.log("detectLargeSpread", {
+      logger.debug("detectLargeSpread", {
         token: token.symbol,
         address: token.address,
         bidB,

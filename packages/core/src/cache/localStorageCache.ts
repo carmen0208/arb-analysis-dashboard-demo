@@ -1,4 +1,5 @@
 import type { CacheAdapter } from "../types";
+import { TIME_CONSTANTS } from "../constants";
 
 export function getFromLocalStorageCache<T>(
   cacheName: string,
@@ -27,7 +28,7 @@ export function getFromLocalStorageCache<T>(
 export function saveToLocalStorageCache<T>(
   cacheName: string,
   data: T,
-  ttl: number = 300000, // Default 5 minutes
+  ttl: number = TIME_CONSTANTS.DEFAULT_CACHE_TTL,
   ...keys: string[]
 ): void {
   if (typeof window === "undefined") return;

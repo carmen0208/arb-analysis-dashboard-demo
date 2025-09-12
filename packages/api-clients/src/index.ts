@@ -5,6 +5,9 @@
 // ===== Unified export of all types and values =====
 export * from "./types";
 
+// Export common utilities and types
+export * from "./common";
+
 // Export price aggregator functionality
 export {
   getMultiSourceTokenPrice,
@@ -36,7 +39,6 @@ export type {
 // Export tick analysis functions
 export {
   getTickLiquidityDistribution,
-  getTickSwapCapacity,
   detectLiquidityCliffs,
 } from "./blockchain/onchain/pools/ticks";
 

@@ -1,6 +1,6 @@
 /**
- * 通用的Rate Limit时间窗口管理器
- * 可被任何API客户端重用来管理多个API key的率限
+ * Generic Rate Limit time window manager
+ * Can be reused by any API client to manage rate limits for multiple API keys
  */
 
 import { getLogger, Logger } from "./logger";
@@ -9,7 +9,7 @@ import { getRedisClient } from "./redis";
 const logger: Logger = getLogger("rate-limit-manager");
 
 /**
- * 配置使用时间追踪器接口
+ * Configuration usage time tracker interface
  */
 export interface ConfigUsageTracker {
   configIndex: number;
@@ -18,12 +18,12 @@ export interface ConfigUsageTracker {
 }
 
 /**
- * Rate Limit配置选项
+ * Rate Limit configuration options
  */
 export interface RateLimitOptions {
-  windowMs: number; // 时间窗口毫秒数
-  maxWaitMs?: number; // 最大等待时间，默认为windowMs + 5秒
-  serviceName?: string; // 服务名称，用于日志
+  windowMs: number; // Time window in milliseconds
+  maxWaitMs?: number; // Maximum wait time, defaults to windowMs + 5 seconds
+  serviceName?: string; // Service name for logging
 }
 
 interface UsageInfo {
@@ -31,8 +31,8 @@ interface UsageInfo {
 }
 
 /**
- * 通用的Rate Limit时间窗口管理器
- * 支持多个API配置的智能轮换和冷却管理
+ * Generic Rate Limit time window manager
+ * Supports intelligent rotation and cooldown management for multiple API configurations
  */
 export class RateLimitManager<T> {
   private configs: T[];
@@ -297,26 +297,6 @@ export class RateLimitManager<T> {
   }
 
   /**
-   * @deprecated Use acquireAndMarkConfigAsUsed() instead to prevent race conditions.
-   * Reserve a configuration without marking it as used
-   * This should be called before making an API request
-   */
-  public async reserveConfig(): Promise<{ config: T; index: number }> {
-    const availableIndex = await this.findAvailableConfigIndex();
-
-    if (availableIndex === null) {
-      logger.error(`[${this.serviceName}] No available configuration found.`);
-      throw new Error("No available configuration found.");
-    }
-
-    const config = this.configs[availableIndex];
-    logger.info(`[${this.serviceName}] Reserved configuration`, {
-      configIndex: availableIndex,
-    });
-    return { config, index: availableIndex };
-  }
-
-  /**
    * Mark a configuration as successfully used after API request succeeds
    * This should be called after a successful API request
    */
@@ -333,27 +313,6 @@ export class RateLimitManager<T> {
     logger.info(`[${this.serviceName}] Marked configuration as used`, {
       configIndex,
     });
-  }
-
-  /**
-   * Release a reserved configuration if the API request fails for non-rate-limit reasons
-   * This should be called when an API request fails but the configuration shouldn't be penalized
-   */
-  public async releaseConfig(configIndex: number): Promise<void> {
-    logger.info(`[${this.serviceName}] Released configuration reservation`, {
-      configIndex,
-    });
-    // No action needed - the config was never marked as used
-  }
-
-  /**
-   * @deprecated Use acquireAndMarkConfigAsUsed() instead
-   * This method is kept for backward compatibility but should not be used in new code
-   */
-  public async getConfigWithIndex(): Promise<{ config: T; index: number }> {
-    const result = await this.reserveConfig();
-    await this.markConfigAsUsed(result.index);
-    return result;
   }
 
   /**
@@ -486,7 +445,7 @@ export class RateLimitManager<T> {
 }
 
 /**
- * 智能等待函数：处理所有配置都在冷却期的情况
+ * Smart waiting function: handles the case when all configurations are in cooldown
  */
 export async function smartWaitForCooldown(
   waitTime: number,
@@ -510,20 +469,20 @@ export async function smartWaitForCooldown(
 }
 
 /**
- * 检查是否为率限错误（扩展默认的重试条件）
+ * Check if it's a rate limit error (extends default retry conditions)
  */
 export function isRateLimitError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
 
   const message = error.message.toLowerCase();
-  // 扩展现有retry.ts中的retryableErrors
+  // Extend existing retryableErrors from retry.ts
   const rateLimitIndicators = [
     "rate limit",
     "too many requests",
     "429",
     "quota exceeded",
     "requests per second",
-    // 来自retry.ts的现有条件
+    // Existing conditions from retry.ts
     "etimedout",
     "econnreset",
     "econnrefused",
@@ -534,18 +493,18 @@ export function isRateLimitError(error: unknown): boolean {
 }
 
 /**
- * 使用示例:
+ * Usage example:
  *
  * const manager = new RateLimitManager(configs, 60000, "OKX DEX", 65000);
- * // 参数: configs, rateLimitDuration (60秒), serviceName, maxWaitMs (65秒)
+ * // Parameters: configs, rateLimitDuration (60 seconds), serviceName, maxWaitMs (65 seconds)
  *
- * // 获取配置
+ * // Get configuration
  * const config = await manager.getConfig();
  *
- * // 监控使用情况
+ * // Monitor usage
  * const stats = await manager.getUsageStats();
  * console.log(`Available: ${stats.availableConfigs}/${stats.totalConfigs}`);
  *
- * // 清理过期数据
+ * // Clean up expired data
  * await manager.clearStaleUsageData();
  */

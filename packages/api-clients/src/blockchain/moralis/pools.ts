@@ -87,7 +87,7 @@ export async function getSolanaTokenPairs({
   network?: string;
 }): Promise<TokenPool[]> {
   try {
-    // 正确的 Moralis Solana API 路径
+    // Correct Moralis Solana API path
     const response = await solanaApiClient.get<{ pairs: SolanaTokenPair[] }>(
       `/token/${network}/${tokenAddress}/pairs`,
     );

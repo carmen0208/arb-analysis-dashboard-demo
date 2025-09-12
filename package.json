@@ -16,22 +16,22 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.28.0",
-    "@typescript-eslint/parser": "^8.28.0",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.5",
-    "husky": "^8.0.0",
-    "lint-staged": "^15.5.0",
-    "prettier": "^3.5.3",
-    "turbo": "^1.10.16",
-    "typescript": "^5.2.2"
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.6.2",
+    "turbo": "^1.13.4",
+    "typescript": "^5.9.2"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
-    "cspell": "^8.18.1"
+    "cspell": "^8.19.4"
   }
 }

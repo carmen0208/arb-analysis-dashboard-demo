@@ -2,6 +2,10 @@
  * Core Utilities
  */
 
+import { getLogger } from "./logger";
+
+const logger = getLogger("core-utils");
+
 /**
  * Safely parse JSON without throwing exceptions
  */
@@ -9,7 +13,9 @@ export function safeJsonParse<T>(text: string, fallback: T): T {
   try {
     return JSON.parse(text) as T;
   } catch (e) {
-    console.error("Error parsing JSON:", e);
+    logger.error("Error parsing JSON", {
+      error: e instanceof Error ? e.message : String(e),
+    });
     return fallback;
   }
 }

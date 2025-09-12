@@ -393,7 +393,7 @@ describe("Bybit Perp Integration", () => {
         expect(firstPoint.price).toBeGreaterThan(0);
         expect(firstPoint.source).toBe("bybit");
 
-        // 验证数据是按时间排序的
+        // Verify data is sorted by time
         for (let i = 1; i < priceData.length; i++) {
           expect(priceData[i].timestamp).toBeGreaterThanOrEqual(
             priceData[i - 1].timestamp,

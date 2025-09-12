@@ -18,7 +18,7 @@ const TEST_TOKEN_ID = "chainlink"; // The expected CoinGecko ID
 // Also test with a native token
 const NATIVE_TOKEN_ID = "ethereum";
 
-// 测试用的token地址（BSC上的USDT）
+// Test token address (USDT on BSC)
 const TEST_TOKEN_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
 
 describe("Token Aggregator API Integration", () => {
@@ -288,7 +288,7 @@ describe("Price Aggregator - OKX Dex Pagination", () => {
       sources: {
         [PriceSourceName.COINGECKO]: {
           name: PriceSourceName.COINGECKO,
-          enabled: false, // 禁用其他源，只测试OKX
+          enabled: false, // Disable other sources, only test OKX
           priority: 1,
         },
         [PriceSourceName.BYBIT]: {
@@ -323,7 +323,7 @@ describe("Price Aggregator - OKX Dex Pagination", () => {
       config,
     );
 
-    // 验证结果
+    // Verify results
     expect(result).toBeDefined();
     expect(result.tokenAddress).toBe(TEST_TOKEN_ADDRESS);
     expect(result.sources).toBeDefined();
@@ -334,11 +334,11 @@ describe("Price Aggregator - OKX Dex Pagination", () => {
     expect(okxData?.historicalData).toBeDefined();
     expect(Array.isArray(okxData?.historicalData)).toBe(true);
 
-    // 验证数据量（应该接近1440个数据点，但可能因为数据可用性而少于这个数字）
+    // Verify data volume (should be close to 1440 data points, but may be less due to data availability)
     // console.log(`OKX Dex data points: ${okxData?.historicalData?.length}`);
     expect(okxData?.historicalData?.length).toBeGreaterThan(1000);
 
-    // 验证数据是按时间排序的
+    // Verify data is sorted by time
     if (okxData?.historicalData && okxData.historicalData.length > 1) {
       for (let i = 1; i < okxData.historicalData.length; i++) {
         expect(okxData.historicalData[i].timestamp).toBeGreaterThanOrEqual(
@@ -347,17 +347,17 @@ describe("Price Aggregator - OKX Dex Pagination", () => {
       }
     }
 
-    // 验证数据源标识
+    // Verify data source identification
     okxData?.historicalData?.forEach((point) => {
       expect(point.source).toBe("okx");
       expect(point.price).toBeGreaterThan(0);
       expect(point.timestamp).toBeGreaterThan(0);
     });
-  }, 30000); // 30秒超时，因为需要多次API调用
+  }, 30000); // 30 second timeout as multiple API calls are needed
 
   it("should handle tokens with limited historical data", async () => {
-    // 使用一个可能数据较少的token进行测试
-    const limitedDataToken = "0x0000000000000000000000000000000000000001"; // 示例地址
+    // Use a token that may have less data for testing
+    const limitedDataToken = "0x0000000000000000000000000000000000000001"; // Example address
 
     const config = {
       sources: {
@@ -398,12 +398,12 @@ describe("Price Aggregator - OKX Dex Pagination", () => {
       config,
     );
 
-    // 验证即使数据很少也能正常处理
+    // Verify that even with little data it can be handled normally
     expect(result).toBeDefined();
     expect(result.sources[PriceSourceName.OKX]).toBeDefined();
 
     const okxData = result.sources[PriceSourceName.OKX];
-    // 对于没有数据的token，应该返回空数组而不是抛出错误
+    // For tokens without data, should return empty array instead of throwing error
     expect(okxData?.historicalData).toBeDefined();
     expect(Array.isArray(okxData?.historicalData)).toBe(true);
   }, 30000);
@@ -411,7 +411,7 @@ describe("Price Aggregator - OKX Dex Pagination", () => {
 
 describe("Price Aggregator - Binance and Bitget Sources", () => {
   beforeAll(() => {
-    // 检查必要的环境变量
+    // Check required environment variables
     const requiredEnvVars: string[] = [];
     const missingVars = requiredEnvVars.filter((name) => !process.env[name]);
     if (missingVars.length > 0) {
@@ -462,7 +462,7 @@ describe("Price Aggregator - Binance and Bitget Sources", () => {
       config,
     );
 
-    // 验证结果
+    // Verify results
     expect(result).toBeDefined();
     expect(result.tokenAddress).toBe(TEST_TOKEN_ADDRESS);
     expect(result.sources).toBeDefined();
@@ -473,7 +473,7 @@ describe("Price Aggregator - Binance and Bitget Sources", () => {
     expect(binanceData?.historicalData).toBeDefined();
     expect(Array.isArray(binanceData?.historicalData)).toBe(true);
 
-    // Binance目前只返回当前价格，历史数据为空数组
+    // Binance currently only returns current price, historical data is empty array
     expect(binanceData?.historicalData?.length).toBe(1440);
   }, 15000);
 
@@ -517,7 +517,7 @@ describe("Price Aggregator - Binance and Bitget Sources", () => {
       config,
     );
 
-    // 验证结果
+    // Verify results
     expect(result).toBeDefined();
     expect(result.tokenAddress).toBe(TEST_TOKEN_ADDRESS);
     expect(result.sources).toBeDefined();
@@ -527,7 +527,7 @@ describe("Price Aggregator - Binance and Bitget Sources", () => {
     expect(bitgetData?.historicalData).toBeDefined();
     expect(Array.isArray(bitgetData?.historicalData)).toBe(true);
 
-    // Bitget目前只返回当前价格，历史数据为空数组
+    // Bitget currently only returns current price, historical data is empty array
     expect(bitgetData?.historicalData?.length).toBe(1440);
   }, 15000);
 
@@ -571,36 +571,36 @@ describe("Price Aggregator - Binance and Bitget Sources", () => {
       config,
     );
 
-    // 验证结果
+    // Verify results
     expect(result).toBeDefined();
     expect(result.tokenAddress).toBe(TEST_TOKEN_ADDRESS);
     expect(result.sources).toBeDefined();
 
-    // 验证两个源都被启用
+    // Verify both sources are enabled
     expect(result.sources[PriceSourceName.BINANCE]).toBeDefined();
     expect(result.sources[PriceSourceName.BITGET]).toBeDefined();
 
     const binanceData = result.sources[PriceSourceName.BINANCE];
     const bitgetData = result.sources[PriceSourceName.BITGET];
 
-    // 验证Binance数据
+    // Verify Binance data
     expect(binanceData?.currentPrice).toBeGreaterThan(0);
     expect(binanceData?.historicalData).toBeDefined();
     expect(Array.isArray(binanceData?.historicalData)).toBe(true);
 
-    // 验证Bitget数据
+    // Verify Bitget data
     expect(bitgetData?.currentPrice).toBeGreaterThan(0);
     expect(bitgetData?.historicalData).toBeDefined();
     expect(Array.isArray(bitgetData?.historicalData)).toBe(true);
 
-    // 验证价格合理性（两个源的价格应该在合理范围内）
+    // Verify price reasonableness (prices from both sources should be within reasonable range)
     const priceDiff = Math.abs(
       binanceData!.currentPrice - bitgetData!.currentPrice,
     );
     const avgPrice = (binanceData!.currentPrice + bitgetData!.currentPrice) / 2;
     const priceDiffPercentage = (priceDiff / avgPrice) * 100;
 
-    // 价格差异应该在20%以内（考虑到不同交易所的价差）
+    // Price difference should be within 20% (considering price differences between different exchanges)
     expect(priceDiffPercentage).toBeLessThan(20);
   }, 20000);
 });

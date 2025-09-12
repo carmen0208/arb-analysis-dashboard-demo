@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import {
   getTokenTopHolders,
-  classifyWallets,
   getTokenPools,
 } from "../../../src/blockchain/moralis/";
 import { getSolanaTokenPairs } from "../../../src/blockchain/moralis/pools";
@@ -62,20 +61,5 @@ describe("Moralis EVM Integration", () => {
     expect(
       pools.find((pool) => pool.exchange_name === "Uniswap v3"),
     ).toBeDefined();
-  });
-
-  it("classifies wallets (stubbed)", async () => {
-    const walletAddresses = [
-      "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
-      "0xDC76CD25977E0a5Ae17155770273aD58648900D3",
-      "0x267be1c1d684f78cb4f6a176c4911b741e4ffdc0",
-    ];
-    const results = await classifyWallets({
-      walletAddresses,
-      chain: ETH_MAINNET,
-      definitionSource: {}, // TODO: Replace with actual Wallet Classification definition type
-    });
-    expect(results.length).toBe(walletAddresses.length);
-    expect(["smart", "sniper", "whale"]).toContain(results[0].type);
   });
 });

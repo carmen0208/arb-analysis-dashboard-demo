@@ -16,11 +16,8 @@ export function setupTokenRotatorFromEnv(envVarName: string): {
   const apiKeysEnv = process.env[envVarName];
   if (!apiKeysEnv) {
     const message = `${envVarName} environment variable not set. Rotation disabled.`;
-    if (logger) {
-      logger.warn(message);
-    } else {
-      console.warn(message);
-    }
+    logger.warn(message);
+
     // Depending on requirements, you might want to throw here or return a dummy rotator
     throw new Error(
       `${envVarName} environment variable is required for token rotation.`,
@@ -38,15 +35,9 @@ export function setupTokenRotatorFromEnv(envVarName: string): {
     );
   }
 
-  if (logger) {
-    logger.info(
-      `Found ${apiKeys.length} API keys in ${envVarName} for rotation.`,
-    );
-  } else {
-    console.log(
-      `Found ${apiKeys.length} API keys in ${envVarName} for rotation.`,
-    );
-  }
+  logger.info(
+    `Found ${apiKeys.length} API keys in ${envVarName} for rotation.`,
+  );
 
   return {
     tokenRotator: createTokenRotator(apiKeys),

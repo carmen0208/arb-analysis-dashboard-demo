@@ -1,0 +1,167 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Structure
+
+This document outlines the organization of the 0xDevAI monorepo, explaining key directories and their purposes.
+
+## Monorepo Structure
+
+The project uses a monorepo structure with [PNPM workspaces](mdc:https:/pnpm.io/workspaces) to manage multiple packages:
+
+```yaml
+# pnpm-workspace.yaml
+packages:
+  - "agents/*"
+  - "apps/*"
+  - "packages/*"
+  - "services/*"
+```
+
+## Root Directory Organization
+
+- **Configuration Files**
+  - [package.json](mdc:package.json): Root package with dev dependencies and workspace scripts
+  - [tsconfig.json](mdc:tsconfig.json): Base TypeScript configuration
+  - [tsconfig.build.json](mdc:tsconfig.build.json): TypeScript config for builds
+  - [.eslintrc.js](mdc:.eslintrc.js): ESLint configuration
+  - [.prettierrc](mdc:.prettierrc): Prettier formatting rules
+  - [turbo.json](mdc:turbo.json): Turborepo configuration for build pipelines
+
+- **Documentation**
+  - [README.md](mdc:README.md): Project overview
+  - `docs/`: Detailed documentation
+    - `api/`: API documentation
+    - `architecture/`: System architecture documentation
+    - `designs/`: Design documents
+    - `requirements/`: Requirements and specifications
+
+## Primary Workspace Areas
+
+### 1. Packages (`packages/`)
+
+Core libraries and shared utilities used across the project:
+
+- **core** (`packages/core/`): Fundamental utilities and shared code
+  - `logger/`: Centralized logging system
+  - `src/`: Core utilities and functions
+
+- **db** (`packages/db/`): Database models, migrations and repositories
+  - `repositories/`: Data access patterns
+  - `migrations/`: Database schema changes
+  - `schema/`: Database schema definitions
+
+- **api-clients** (`packages/api-clients/`): API client libraries
+  - `blockchain/`: Blockchain API clients
+  - `github/`: GitHub API integration
+  - `social/`: Social media API clients
+
+- **ai** (`packages/ai/`): AI model integrations and utilities
+  - `models/`: AI model implementations
+  - `prompt-templates/`: Reusable prompt templates
+  - `function-definitions/`: Function calling definitions
+
+- **cronjob** (`packages/cronjob/`): Scheduled task implementations
+  - `tasks/`: Background job definitions
+  - `web/`: Web interface for job management
+
+### 2. Agents (`agents/`)
+
+AI agents with specific purposes:
+
+- **discovery-agent** (`agents/discovery-agent/`): Analyzes repositories and code
+  - `src/insights/`: Insight generation logic
+  - `src/tools/`: Agent-specific tools
+  - `src/prompts/`: Agent-specific prompts
+
+- **trading-agent** (`agents/trading-agent/`): Trading automation and analysis
+  - `src/core/`: Core trading logic
+  - `src/types/`: Trading-specific type definitions
+
+- **common** (`agents/common/`): Shared utilities across agents
+  - `llm/`: Language model interfaces
+  - `utils/`: Common utilities
+
+### 3. Services (`services/`)
+
+Backend services and APIs:
+
+- **api-server** (`services/api-server/`): Main API server
+  - `controllers/`: API route controllers
+  - `middleware/`: Request processing middleware
+
+- **workers** (`services/workers/`): Background processing services
+  - `analysis/`: Data analysis workers
+  - `discovery/`: Repository discovery workers
+  - `scheduler/`: Task scheduling workers
+
+### 4. Apps (`apps/`)
+
+Frontend applications:
+
+- **web-dashboard** (`apps/web-dashboard/`): Web interface
+  - `app/`: Next.js app directory
+  - `components/`: React components
+  - `lib/`: Frontend utilities
+
+## Additional Directories
+
+- **tests/** - Test suite organization
+  - `e2e/`: End-to-end tests
+  - `integration/`: Integration tests
+
+- **docker/** - Docker configurations and services
+
+- **scripts/** - Build and utility scripts
+
+- **tasks/** - Task management files (used with TaskMaster)
+
+- **memory-bank/** - Storage for system memory and knowledge
+
+## Development Workflow
+
+The project uses Task Master for development organization. See [README-task-master.md](mdc:README-task-master.md) and [dev_workflow.mdc](mdc:.cursor/rules/dev_workflow.mdc) for details.
+
+## Building & Running
+
+The project uses Turborepo for efficient builds:
+
+```bash
+# Install dependencies
+pnpm install
+
+# Development mode
+pnpm dev
+
+# Build all packages
+pnpm build
+
+# Run tests
+pnpm test
+```
+
+## Common Development Patterns
+
+- **Package References**: Packages reference each other using the `@dex-ai/*` namespace
+  ```typescript
+  // Example: importing from core package
+  import { getLogger } from "@dex-ai/core";
+  ```
+
+- **Shared Configuration**: Packages extend from root configuration but may override specific settings
+  ```json
+  // Example package tsconfig.json
+  {
+    "extends": "../../tsconfig.build.json",
+    "compilerOptions": {
+      "outDir": "./dist"
+    }
+  }
+  ```
+
+- **Directory Structure**: Each package generally follows a consistent structure:
+  - `src/`: Source code
+  - `dist/`: Compiled output
+  - `tests/`: Package-specific tests

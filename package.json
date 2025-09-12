@@ -1,0 +1,37 @@
+{
+  "name": "dex-ai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "checkspell": "cspell * --config cspell.json",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "clean:all": "rm -rf node_modules && rm -rf packages/*/node_modules && rm -rf apps/*/node_modules && rm -rf agents/*/node_modules && rm -rf services/*/node_modules && rm -rf .cache && rm -rf packages/*/.cache && rm -rf apps/*/.cache && rm -rf agents/*/.cache && rm -rf services/*/.cache && rm -rf .turbo && rm -rf packages/*/.turbo && rm -rf apps/*/.turbo && rm -rf agents/*/.turbo && rm -rf services/*/.turbo",
+    "reset": "pnpm run clean:all && pnpm install && pnpm run build",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.5",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.5.3",
+    "turbo": "^1.10.16",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "pnpm@10.14.0",
+  "dependencies": {
+    "cspell": "^8.18.1"
+  }
+}

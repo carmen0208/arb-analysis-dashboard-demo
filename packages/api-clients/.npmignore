@@ -1,0 +1,14 @@
+.env
+*.ts
+src/
+test/
+*.bak
+*.test.ts
+tsup.config.ts
+vitest.config.*
+.vscode/
+.cache/
+logs/
+.turbo/
+vitest.integration.config.mts
+tsconfig.json

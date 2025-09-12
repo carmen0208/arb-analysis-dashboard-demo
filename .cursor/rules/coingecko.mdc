@@ -1,0 +1,265 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# CoinGecko API Client Guidelines
+
+This document outlines patterns and best practices for implementing and using the CoinGecko API client in the 0xDevAI project.
+
+## Architecture Overview
+
+The CoinGecko API client follows a functional approach with separation of concerns:
+
+- **[client.ts](mdc:packages/api-clients/src/blockchain/coingecko/client.ts)**: Axios instance configuration and setup
+- **[request.ts](mdc:packages/api-clients/src/blockchain/coingecko/request.ts)**: Generic request handling with retry logic
+- **[index.ts](mdc:packages/api-clients/src/blockchain/coingecko/index.ts)**: Public API functions for specific endpoints
+- **[types.ts](mdc:packages/api-clients/src/blockchain/coingecko/types.ts)**: TypeScript interfaces for API responses
+- **[constants.ts](mdc:packages/api-clients/src/blockchain/coingecko/constants.ts)**: Configuration constants
+
+## Client Configuration
+
+- **✅ DO:** Use the singleton `apiClient` instance for all requests
+  ```typescript
+  import { apiClient } from "./client";
+  
+  // Use via makeApiRequest
+  makeApiRequest(apiClient, "/endpoint", params);
+  ```
+
+- **❌ DON'T:** Create new client instances for each request
+  ```typescript
+  // Don't do this
+  const client = createApiClient(apiKey);
+  client.get("/endpoint");
+  ```
+
+## API Request Patterns
+
+- **✅ DO:** Use the `makeApiRequest` helper for all API calls
+  ```typescript
+  import { makeApiRequest } from "./request";
+  import { apiClient } from "./client";
+  import { SomeResponseType } from "./types";
+  
+  // Example of proper API request
+  const response = await makeApiRequest<SomeResponseType>(
+    apiClient,
+    "/endpoint_path",
+    { param1: "value1" },
+    { contextId: "some-id" } // Error context
+  );
+  ```
+
+- **✅ DO:** Include meaningful error context
+  ```typescript
+  // Good error context
+  makeApiRequest<TokenInfo[]>(
+    apiClient,
+    "/coins/markets",
+    { vs_currency: "usd", per_page: limit },
+    { operation: "getTopTokens", limit }
+  );
+  ```
+
+- **❌ DON'T:** Make direct axios calls that bypass retry logic
+  ```typescript
+  // Don't do this
+  const response = await apiClient.get("/endpoint");
+  ```
+
+## Caching Pattern
+
+- **✅ DO:** Use core caching utilities for all cacheable data
+  ```typescript
+  import { getFromCache, saveToCache, getCacheFilePath } from "@dex-ai/core";
+  
+  // Check cache first
+  const cacheFilePath = getCacheFilePath(cacheName, ...cacheKeys);
+  const cachedData = getFromCache<DataType>(cacheName, ...cacheKeys);
+  
+  // Save to cache
+  saveToCache<DataType>(cacheName, freshData, ...cacheKeys);
+  ```
+
+- **✅ DO:** Include cache validation logic for time-sensitive data
+  ```typescript
+  // Example cache validation
+  const stats = await fs.stat(cacheFilePath);
+  const now = Date.now();
+  if (now - stats.mtimeMs < CACHE_DURATION) {
+    // Cache is valid, use it
+  }
+  ```
+
+- **✅ DO:** Offer a `forceRefresh` parameter for bypassing cache
+  ```typescript
+  export async function getData(forceRefresh: boolean = false) {
+    if (!forceRefresh) {
+      // Check cache first
+    }
+    // Fetch fresh data...
+  }
+  ```
+
+## Logging Practices
+
+- **✅ DO:** Use consistent logging prefixes within API clients
+  ```typescript
+  // Good - consistent prefix
+  logger.info("[CoinGecko] Fetching coin list", { forceRefresh });
+  logger.error("[CoinGecko] Error fetching price", { id, currency, error: err.message });
+  ```
+
+- **✅ DO:** Include structured context in all logs
+  ```typescript
+  // Good - includes relevant context
+  logger.info("[CoinGecko] Successfully fetched coins from API", {
+    coinCount: freshData.length,
+  });
+  ```
+
+- **✅ DO:** Separate log formatting into helper functions for complex logs
+  ```typescript
+  // Example helper function pattern
+  function logSearchResults(query: string, count: number): void {
+    logger.info("[CoinGecko] Search results", { query, resultCount: count });
+  }
+  ```
+
+## Error Handling
+
+- **✅ DO:** Handle and log errors, but allow propagation to caller
+  ```typescript
+  try {
+    // API operation...
+  } catch (error) {
+    logger.error("[CoinGecko] Operation failed", {
+      context,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error; // Re-throw for caller to handle
+  }
+  ```
+
+- **✅ DO:** Provide fallback mechanisms for critical operations
+  ```typescript
+  try {
+    // Primary operation...
+  } catch (error) {
+    logger.warn("[CoinGecko] Primary method failed, attempting fallback", { error: error.message });
+    // Fallback mechanism...
+  }
+  ```
+
+## Type Safety
+
+- **✅ DO:** Define and use TypeScript interfaces for all API responses
+  ```typescript
+  // Example type definitions
+  export interface TokenInfo {
+    id: string;
+    symbol: string;
+    name: string;
+    price: number;
+    marketCap?: number;
+  }
+  
+  // Example usage with type parameter
+  const response = await makeApiRequest<TokenInfo[]>(apiClient, "/endpoint");
+  ```
+
+- **✅ DO:** Use type narrowing and guards for optional properties
+  ```typescript
+  // Safe property access with optional chaining
+  const price = response.data?.[id]?.[currency] || null;
+  ```
+
+## API Function Structure
+
+- **✅ DO:** Follow a consistent function signature pattern
+  ```typescript
+  export async function someApiFunction(
+    requiredParam: string,
+    optionalParam: string = "default",
+  ): Promise<ResultType | null> {
+    logger.info("[CoinGecko] Function purpose", { requiredParam, optionalParam });
+    
+    try {
+      // Implementation...
+      return result;
+    } catch (error) {
+      logger.error("[CoinGecko] Error in function", { 
+        requiredParam, 
+        optionalParam,
+        error: error instanceof Error ? error.message : String(error) 
+      });
+      return null; // Or throw, depending on function contract
+    }
+  }
+  ```
+
+- **✅ DO:** Extract complex logic into helper functions
+  ```typescript
+  // Public API function
+  export async function getCoinInfo(query: string): Promise<CoinListInfo[]> {
+    // Main logic...
+    const filteredCoins = filterCoinsByQuery(allCoins, query);
+    return filteredCoins;
+  }
+  
+  // Private helper function
+  function filterCoinsByQuery(
+    coins: CoinListInfo[],
+    query: string,
+  ): CoinListInfo[] {
+    // Implementation...
+  }
+  ```
+
+## Environment Variables
+
+- **✅ DO:** Use environment variables for API keys and configuration
+  ```typescript
+  const apiKey = process.env.COINGECKO_API_KEY || "";
+  ```
+
+- **✅ DO:** Provide informative logs when environment variables are missing
+  ```typescript
+  if (apiKey) {
+    logger.info("[CoinGecko Client] Using API Key from environment variable");
+  } else {
+    logger.warn(
+      "[CoinGecko Client] COINGECKO_API_KEY not set. Using public API (rate limits may apply)",
+    );
+  }
+  ```
+
+## Constants Management
+
+- **✅ DO:** Define reusable constants in a dedicated file
+  ```typescript
+  // constants.ts
+  export const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
+  export const CACHE_DURATION = 60 * 60 * 1000; // Cache for 1 hour
+  ```
+
+- **❌ DON'T:** Hardcode configuration values within implementation files
+  ```typescript
+  // Don't do this
+  axios.create({
+    baseURL: "https://api.coingecko.com/api/v3", // Should use constant
+    timeout: 15000,
+  });
+  ```
+
+## Future API Client Implementation
+
+When implementing new blockchain data providers, follow these patterns:
+
+1. Create a similar directory structure with client, request, types, constants, and index files
+2. Use the same functional approach with single-purpose functions
+3. Implement consistent error handling and logging
+4. Leverage the core caching system for performance optimization
+5. Define clear TypeScript interfaces for all API responses

@@ -1,0 +1,37 @@
+{
+  "name": "@dex-ai/web-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "clean": "rimraf .next"
+  },
+  "dependencies": {
+    "@dex-ai/api-clients": "workspace:*",
+    "@dex-ai/core": "workspace:*",
+    "bufferutil": "^4.0.9",
+    "encoding": "^0.1.13",
+    "lightweight-charts": "^5.0.7",
+    "next": "^13.5.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^3.0.2",
+    "swr": "^2.2.4",
+    "utf-8-validate": "^6.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.3",
+    "@types/react": "^18.2.22",
+    "@types/react-dom": "^18.2.7",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^8.49.0",
+    "eslint-config-next": "^13.5.3",
+    "postcss": "^8.5.3",
+    "rimraf": "^5.0.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.2.2"
+  }
+}

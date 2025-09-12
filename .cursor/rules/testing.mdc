@@ -1,0 +1,308 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Testing Guidelines
+
+This document outlines the testing approach, patterns, and best practices for the 0xDevAI project. These guidelines should be followed for all new tests and when maintaining existing tests.
+
+## Testing Framework
+
+The project uses [Vitest](mdc:https:/vitest.dev) as the primary testing framework.
+
+```typescript
+// ✅ DO: Import from vitest for test definitions
+import { describe, it, expect, beforeAll } from "vitest";
+```
+
+## Test Organization
+
+Tests are organized based on their scope and purpose:
+
+- **Unit Tests**: Located alongside the source code files they test
+- **Integration Tests**: Located in the `test/integration` directory of each package
+  - Organized by domain/service (e.g., `github`, `blockchain`)
+  - Requires environment setup for external services
+
+```
+packages/api-clients/
+├── src/               # Source code
+│   └── ... 
+├── test/              # Test directory
+│   ├── integration/   # Integration tests
+│   │   ├── setup.ts   # Common test setup code
+│   │   ├── github/    # GitHub API tests
+│   │   └── blockchain/ # Blockchain API tests
+```
+
+## Test File Naming
+
+- **✅ DO**: Name test files with `.test.ts` suffix
+- **✅ DO**: Name test files to match the source file they test (e.g., `commits.ts` → `commits.test.ts`)
+
+## Test Structure
+
+Tests should be organized using `describe` and `it` blocks for clear hierarchical structure:
+
+```typescript
+// ✅ DO: Organize tests with descriptive blocks
+describe("GitHub Commits API Integration", () => {
+  // Setup code...
+  
+  describe("getRecentCommits", () => {
+    it("should fetch recent commits from the test repository", async () => {
+      // Test implementation...
+    });
+    
+    it("should respect perPage option", async () => {
+      // Test implementation...
+    });
+  });
+  
+  describe("getCommit", () => {
+    // More tests...
+  });
+});
+```
+
+## Test Setup and Teardown
+
+- **✅ DO**: Use `beforeAll` for one-time setup
+- **✅ DO**: Use `beforeEach` for per-test setup
+- **✅ DO**: Use `afterEach` and `afterAll` for cleanup
+
+```typescript
+// ✅ DO: Properly handle test setup and teardown
+describe("API Test Suite", () => {
+  let client: ApiClient;
+  
+  beforeAll(() => {
+    // One-time setup (runs once before all tests)
+    client = createTestClient();
+  });
+  
+  beforeEach(() => {
+    // Setup before each test
+  });
+  
+  afterEach(() => {
+    // Cleanup after each test
+  });
+  
+  afterAll(() => {
+    // Final cleanup
+  });
+  
+  // Test cases...
+});
+```
+
+## Environment Configuration
+
+For tests requiring external services, use a separate setup file:
+
+- **✅ DO**: Create a `setup.ts` file for common configuration
+- **✅ DO**: Use environment variables for credentials and configuration
+- **✅ DO**: Validate environment variables early and provide clear error messages
+
+```typescript
+// ✅ DO: Validate required environment variables - example from setup.ts
+export function validateEnv() {
+  const missingVars = requiredEnvVars.filter((name) => !process.env[name]);
+
+  if (missingVars.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missingVars.join(", ")}\n` +
+      "Please create a .env file with these variables."
+    );
+  }
+}
+```
+
+## Assertions
+
+Use Jest-style assertions with type validation:
+
+```typescript
+// ✅ DO: Write clear assertions with appropriate matchers
+expect(Array.isArray(commits)).toBe(true);
+expect(commits.length).toBeGreaterThan(0);
+
+// ✅ DO: Use type-aware object matching
+expect(firstCommit).toMatchObject<CommitType>({
+  sha: expect.any(String),
+  commit: {
+    message: expect.any(String),
+    author: {
+      name: expect.any(String),
+      email: expect.any(String),
+      date: expect.any(String),
+    },
+  },
+});
+```
+
+## API Testing Patterns
+
+### Rate Limiting
+
+When testing external APIs with rate limits:
+
+- **✅ DO**: Add delays between API calls
+- **✅ DO**: Implement proper error handling for rate limit errors
+- **✅ DO**: Use caching where appropriate to reduce API calls
+
+```typescript
+// ✅ DO: Add delays for rate-limited APIs
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const API_DELAY = 1000; // 1 second delay
+
+it("should fetch data from rate-limited API", async () => {
+  const result = await apiCall();
+  await delay(API_DELAY); // Wait before next test
+  expect(result).toBeDefined();
+});
+```
+
+### Test Data
+
+- **✅ DO**: Create helper functions for common test data
+- **✅ DO**: Use representative but non-sensitive test data
+- **✅ DO**: Export common test values from setup files
+
+```typescript
+// ✅ DO: Export test data helpers
+export const testRepoOwner = process.env.GITHUB_TEST_REPO_OWNER!;
+export const testRepoName = process.env.GITHUB_TEST_REPO_NAME!;
+
+export function getYesterday() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString();
+}
+```
+
+## Error Testing
+
+Always test error handling:
+
+```typescript
+// ✅ DO: Test error cases
+it("should throw an error for non-existent commit SHA", async () => {
+  const nonExistentSHA = "0".repeat(40); // Invalid SHA
+
+  await expect(
+    getCommit({
+      octokit,
+      owner: testRepoOwner,
+      repo: testRepoName,
+      sha: nonExistentSHA,
+    }),
+  ).rejects.toThrow();
+});
+```
+
+## Running Tests
+
+The project provides several npm scripts for running tests:
+
+```bash
+# Run all tests
+npm test
+
+# Run only unit tests
+npm run test:unit
+
+# Run only integration tests
+npm run test:integration
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+## Test Coverage
+
+Test coverage is measured using [V8 coverage provider](mdc:https:/vitest.dev/guide/coverage.html):
+
+- **✅ DO**: Aim for the minimum coverage thresholds:
+  - 20% line coverage
+  - 20% function coverage
+  - 20% branch coverage
+  - 20% statement coverage
+- **✅ DO**: Focus on testing critical business logic and error handling
+- **✅ DO**: Increase coverage over time
+
+Coverage configuration is defined in `vitest.config.mts`:
+
+```typescript
+coverage: {
+  provider: "v8",
+  reporter: ["text", "json", "html"],
+  include: ["src/**/*.ts"],
+  exclude: [
+    "src/**/*.test.ts",
+    "**/test/**",
+    // Other excluded patterns...
+  ],
+  all: true,
+  thresholds: {
+    lines: 20,
+    functions: 20,
+    branches: 20,
+    statements: 20,
+  },
+},
+```
+
+## Integration vs Unit Tests
+
+- **Unit Tests**: Test individual functions or modules in isolation
+  - Fast execution
+  - No external dependencies
+  - Focus on logic and edge cases
+  
+- **Integration Tests**: Test interaction with external systems
+  - Require environment configuration
+  - May be slower to execute
+  - Need to handle network issues and rate limits
+  - Test real-world scenarios
+
+## Mocking
+
+For unit tests, use Vitest's mocking capabilities:
+
+```typescript
+// ✅ DO: Use vi.mock for dependencies
+import { vi } from 'vitest';
+
+// Mock external module
+vi.mock('axios', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: mockResponse })
+  }
+}));
+
+// ✅ DO: Reset mocks between tests
+beforeEach(() => {
+  vi.resetAllMocks();
+});
+```
+
+## Test Timeout Configuration
+
+- **✅ DO**: Set appropriate timeouts for tests that may take longer
+- **✅ DO**: Use longer timeouts for integration tests
+
+```typescript
+// ✅ DO: Set timeout for long-running tests
+it("should fetch a large dataset", async () => {
+  // Test implementation
+}, 15000); // 15 second timeout
+```
+
+## Documentation
+
+- **✅ DO**: Document test prerequisites (environment variables, etc.)
+- **✅ DO**: Include example .env files (without real credentials)
+- **✅ DO**: Document any special setup required for tests

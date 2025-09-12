@@ -1,0 +1,71 @@
+/.git
+/node_modules
+.dockerignore
+.env
+.env.*
+!.env.example
+
+.cache
+.vercel
+.eslintcache
+.turbo
+
+Dockerfile
+fly.toml
+
+.idea
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Test files
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+test/
+tests/
+
+# Development files
+.husky/
+.github/
+.cursor/
+.vscode/
+.huskyrc
+.lintstagedrc
+.prettierrc
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Package manager files
+.npm/
+.yarn/
+.pnpm-store/

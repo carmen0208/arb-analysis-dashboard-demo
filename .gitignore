@@ -1,0 +1,69 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build output
+dist
+build
+.next
+out
+lib
+tsconfig.tsbuildinfo
+*.bundled_*
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Testing
+coverage
+
+# Cache
+.turbo
+.cache
+.vercel
+.eslintcache
+.swc
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Package specific
+apps/web-dashboard/.next/
+services/api-server/dist/
+
+# Logs
+logs
+*.log
+
+# Added by Claude Task Master
+dev-debug.log
+# Dependency directories
+node_modules/
+# Editor directories and files
+.vscode
+# OS specific
+# Task files
+tasks.json
+/tasks/
+.cursor/mcp.json
+
+/packages/cronjob/db/

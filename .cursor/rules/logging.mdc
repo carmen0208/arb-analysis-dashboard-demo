@@ -1,0 +1,160 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Logging Guidelines
+
+The project uses structured logging through [Winston](mdc:https:/github.com/winstonjs/winston), with standardized logger instances that should be consistently applied across the codebase.
+
+## Logger Setup
+
+- **Always Import Core Logger:**
+  - Import the logger from the core package: `import { getLogger, Logger } from "@dex-ai/core";`
+  - For component-specific loggers, create an instance with the component name:
+  ```typescript
+  // ✅ DO: Create a component-specific logger
+  const logger: Logger = getLogger("component-name");
+  export default logger;
+  
+  // ❌ DON'T: Create loggers inline or use console logging
+  console.log("Some message"); // Avoid direct console use
+  ```
+
+- **Component-Specific Loggers:**
+  - Each component/service/agent should have its own logger
+  - See examples in [api-clients/common/logger.ts](mdc:packages/api-clients/src/common/logger.ts) and [discovery-agent/tools/logger.ts](mdc:agents/discovery-agent/src/tools/logger.ts)
+
+## Log Levels Usage
+
+- **DEBUG:** For detailed troubleshooting information
+  ```typescript
+  // ✅ DO: Include context data with debug logs 
+  logger.debug("Processing batch", { batchId, itemCount: items.length });
+  ```
+
+- **INFO:** For general operational information
+  ```typescript
+  // ✅ DO: Log application lifecycle events
+  logger.info("Starting discovery agent..."); 
+  
+  // ✅ DO: Include structured data with context
+  logger.info("[analyzeCommit] Fetching commit", { owner, repo, sha });
+  ```
+
+- **WARN:** For potential issues that aren't errors
+  ```typescript
+  // ✅ DO: Warn about recoverable issues
+  logger.warn("API rate limit approaching", { 
+    remaining: rateLimitInfo.remaining,
+    resetTime: rateLimitInfo.resetAt
+  });
+  ```
+
+- **ERROR:** For application errors
+  ```typescript
+  // ✅ DO: Include error objects and context
+  logger.error("Failed to process commit", { 
+    commitId: sha, 
+    error: error.message,
+    stack: error.stack
+  });
+  
+  // ❌ DON'T: Log without context
+  logger.error("Something went wrong"); // Too vague
+  ```
+
+## Structured Logging Practices
+
+- **Use Metadata Objects:**
+  - Always include relevant context as a structured object
+  ```typescript
+  // ✅ DO: Provide structured context
+  logger.info("Analysis completed", {
+    repoName: repo,
+    commitCount: commits.length,
+    duration: Date.now() - startTime
+  });
+  
+  // ❌ DON'T: Use string concatenation
+  logger.info(`Analysis for ${repo} completed with ${commits.length} commits`);
+  ```
+
+- **Consistent Naming:**
+  - Use a consistent prefix pattern for related logs (e.g., `[analyzeCommit]`)
+  - Use action verbs in present or past tense for clarity
+  ```typescript
+  // ✅ DO: Use consistent prefixes and verbs
+  logger.info("[analyzeCommit] Fetching commit", { owner, repo, sha });
+  logger.info("[analyzeCommit] Commit fetched", { owner, repo, sha });
+  ```
+
+## Error Handling and Logging
+
+- **Try/Catch Blocks:**
+  - Always log in catch blocks
+  ```typescript
+  try {
+    // Operation that might fail
+  } catch (error) {
+    // ✅ DO: Log with error object and context
+    logger.error("Failed to analyze commit", { 
+      sha, 
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    // Handle or re-throw as needed
+  }
+  ```
+
+- **Use withRetry Pattern:**
+  - For operations that might fail temporarily, use the retry pattern from [core/retry.ts](mdc:packages/core/src/retry.ts)
+  - Include logging in the onError callback
+  ```typescript
+  // ✅ DO: Use withRetry with error logging
+  const result = await withRetry(
+    () => someOperation(),
+    {
+      maxRetries: 3,
+      onError: (error, attempt) => {
+        logger.warn(`Operation failed (attempt ${attempt})`, { 
+          error: error instanceof Error ? error.message : String(error),
+          willRetry: attempt < 3
+        });
+      }
+    }
+  );
+  ```
+
+## Audit Logging
+
+- **Security and Compliance Events:**
+  - Use the `auditLogger` for security-related, compliance, or user action events
+  ```typescript
+  // ✅ DO: Use audit logger for significant events
+  import { auditLogger } from "@dex-ai/core";
+  
+  // Log user actions
+  auditLogger.log("audit", "USER_LOGIN", { 
+    userId: user.id,
+    timestamp: new Date().toISOString(),
+    ip: request.ip,
+    userAgent: request.headers["user-agent"]
+  });
+  ```
+
+## Environment-Specific Logging
+
+- **Development vs. Production:**
+  - Development: More verbose (debug level), console output
+  - Production: Less verbose (info level or higher), file output
+  - Controlled via `NODE_ENV` environment variable
+  - See [logger/index.ts](mdc:packages/core/src/logger/index.ts) for configuration
+
+## Common Logging Anti-Patterns
+
+- **❌ DON'T:** Log sensitive information (tokens, credentials, private user data)
+- **❌ DON'T:** Log without context or with vague messages
+- **❌ DON'T:** Use `console.log/error` directly - use the logger
+- **❌ DON'T:** Log large objects that may bloat log files (truncate when needed)
+- **❌ DON'T:** Create multiple loggers for the same component
